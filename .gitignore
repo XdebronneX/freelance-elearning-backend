@@ -2,7 +2,10 @@
 node_modules/
 
 # Environment variables file
-.env
+config/.env
 
 # Package lock file
 package-lock.json
+
+# macOS system file
+.DS_Store
