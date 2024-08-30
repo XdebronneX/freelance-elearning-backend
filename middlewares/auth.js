@@ -2,17 +2,17 @@ const UserModel = require('../models/user');
 const jwt = require('jsonwebtoken');
 const ErrorHandler = require('../utils/errorHandler');
 
-// Middleware to authenticate user
 exports.isAuthenticatedUser = async (req, res, next) => {
     try {
         const authHeader = req.headers.authorization;
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        const token = authHeader && authHeader.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
+
+        if (!token) {
             return next(new ErrorHandler('Authorization token missing. Please login to access this resource.', 401));
         }
 
-        const token = authHeader.split(' ')[1];
         const decoded = jwt.verify(token, process.env.SECRET_KEY);
-        req.user = await UserModel.findById(decoded.id).lean();
+        req.user = await UserModel.findById(decoded.id);
 
         if (!req.user) {
             return next(new ErrorHandler('User not found. Please login again.', 401));
@@ -20,14 +20,12 @@ exports.isAuthenticatedUser = async (req, res, next) => {
 
         next();
     } catch (err) {
-
         if (err instanceof jwt.TokenExpiredError) {
             return next(new ErrorHandler('Session expired. Please login again.', 401));
         } else if (err instanceof jwt.JsonWebTokenError) {
             return next(new ErrorHandler('Invalid token. Please login again.', 401));
         }
-
-        console.error('Token Verification Error:', err.message); 
+        console.error('Token Verification Error:', err);
         return next(new ErrorHandler('An error occurred. Please try again later.', 500));
     }
 };

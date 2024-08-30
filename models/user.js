@@ -52,7 +52,6 @@ const userSchema = new mongoose.Schema({
             message: 'Invalid date format!'
         }
     },
-    
     gender: {
         type: String,
         required: [true, 'Please enter your gender'],
@@ -72,6 +71,16 @@ const userSchema = new mongoose.Schema({
     address: {
         type: String,
         required: [true, 'Please enter your address'],
+    },
+    isDelete: {
+        type: Boolean,
+        default: false
+    },
+    loginType: {
+        type: String,
+    },
+    metaData: {
+        type: String,
     },
     avatar: {
         public_id: {

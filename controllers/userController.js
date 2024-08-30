@@ -221,6 +221,127 @@ exports.loginUser = async (req, res, next) => {
   }
 };
 
+exports.getProfile = async (req, res, next) => {
+    try {
+      const user = await UserModel.findById(req.user.id);
+      if (!user) {
+        return next(new ErrorHandler("User not found", 404));
+      }
+      res.status(200).json({
+        success: true,
+        user,
+      });
+    } catch (error) {
+      console.error(error);
+      return next(new ErrorHandler("Failed to get user profile", 500));
+    }
+};
+
+exports.updatePassword = async (req, res, next) => {
+    try {
+      // Find user by ID
+      const user = await UserModel.findById(req.user.id).select("password");
+  
+      // Check if user exists
+      if (!user) {
+        return next(new ErrorHandler("User not found", 404));
+      }
+  
+      // Check if the old password is correct
+      const isMatched = await user.comparePassword(req.body.oldPassword);
+      if (!isMatched) {
+        return next(new ErrorHandler("Old password is incorrect", 400));
+      }
+  
+      // Update password
+      user.password = req.body.password;
+      await user.save();
+  
+      // Send success response
+      sendToken(user, 200, res);
+    } catch (error) {
+        console.error(error.message);
+        return next(new ErrorHandler("Internal server error", 500));
+    }
+};
+
+exports.updateProfile = async (req, res, next) => {
+    try {
+        const existingPhoneUser = await UserModel.findOne({
+            phone: req.body.mobileNumber,
+          });
+          if (existingPhoneUser) {
+            return next(new ErrorHandler("Mobile number already taken!", 400));
+          }
+          
+      const newUserData = {
+        firstname: req.body.firstname,
+        lastname: req.body.lastname,
+        gender: req.body.gender,
+        phone: req.body.phone,
+        region: req.body.region,
+        province: req.body.province,
+        city: req.body.city,
+        barangay: req.body.barangay,
+        postalcode: req.body.postalcode,
+        address: req.body.address,
+      };
+  
+      /** Update Avatar */
+      if (req.body.avatar !== "") {
+        const user = await UserModel.findById(req.user.id);
+  
+        // Check if the user has an existing avatar
+        if (user.avatar && user.avatar.public_id) {
+          const image_id = user.avatar.public_id;
+  
+          // Destroy the previous avatar
+          await cloudinary.v2.uploader.destroy(image_id);
+        }
+  
+        // Upload the new avatar
+        const uploadResult = await cloudinary.v2.uploader.upload(
+          req.body.avatar,
+          {
+            folder: "avatars",
+            width: 150,
+            crop: "scale",
+          }
+        );
+  
+        newUserData.avatar = {
+          public_id: uploadResult.public_id,
+          url: uploadResult.secure_url,
+        };
+      }
+  
+      // Update the user profile
+      const user = await UserModel.findByIdAndUpdate(req.user.id, newUserData, {
+        new: true,
+        runValidators: true,
+      });
+  
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: "User not found",
+        });
+      }
+  
+      res.status(200).json({
+        success: true,
+        user,
+      });
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({
+        success: false,
+        message: "An error occurred while updating the profile",
+        error: error.message,
+      });
+    }
+};
+
 exports.forgotPassword = async (req, res, next) => {
   try {
     const user = await UserModel.findOne({ email: req.body.email });
@@ -228,6 +349,12 @@ exports.forgotPassword = async (req, res, next) => {
     if (!user) {
       return next(new ErrorHandler("User not found with this email", 400));
     }
+
+    // Check if the user is activated
+    if (!user.verified) {
+        return next(new ErrorHandler("You don't have access!", 403));
+      }
+
     const resetToken = user.getResetPasswordToken();
     await user.save({ validateBeforeSave: false });
 

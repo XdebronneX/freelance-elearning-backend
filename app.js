@@ -1,11 +1,13 @@
 const express = require('express');
 const app = express();
+const cookieParser = require('cookie-parser');
 
 const errorMiddleware = require('./middlewares/errors');
 const users = require('./routes/user');
 
 // Middleware
 app.use(express.json());
+app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
 
 // Routes
