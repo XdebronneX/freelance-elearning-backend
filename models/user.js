@@ -35,6 +35,43 @@ const userSchema = new mongoose.Schema({
             },
             message: 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character.'
         }
+    },    
+    mobileNumber: {
+        type: String,
+        required: [true, 'Please enter your mobile number'],
+        unique: true,
+    },
+    // yyyy-mm-dd
+    birthDate: {
+        type: Date,
+        required: [true, 'Please enter your birthdate'],
+        validate: {
+            validator: function (v) {
+                return !isNaN(Date.parse(v));
+            },
+            message: 'Invalid date format!'
+        }
+    },
+    
+    gender: {
+        type: String,
+        required: [true, 'Please enter your gender'],
+    },
+    country: {
+        type: String,
+        required: [true, 'Please enter your country'],
+    },
+    province: {
+        type: String,
+        required: [true, 'Please enter your province'],
+    },
+    city: {
+        type: String,
+        required: [true, 'Please enter your city'],
+    },
+    address: {
+        type: String,
+        required: [true, 'Please enter your address'],
     },
     avatar: {
         public_id: {
@@ -59,7 +96,7 @@ const userSchema = new mongoose.Schema({
 // JWT Token generation method
 userSchema.methods.getJwtToken = function () {
     return jwt.sign({ id: this._id }, process.env.SECRET_KEY, {
-        expiresIn: process.env.JWT_EXPIRES_TIME || '1h'
+        expiresIn: process.env.JWT_EXPIRES_TIME
     });
 }
 
