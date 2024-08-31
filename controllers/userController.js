@@ -3,45 +3,95 @@ const ErrorHandler = require("../utils/errorHandler");
 const cloudinary = require("cloudinary");
 const sendToken = require("../utils/jwtToken");
 const sendMail = require("../utils/sendMail");
-const TokenModel = require("../models/token");
 const bcrypt = require("bcryptjs");
-const crypto = require("crypto");
 
-exports.verifyEmail = async (req, res, next) => {
+exports.verifyOTP = async (req, res, next) => {
   try {
-    const user = await UserModel.findOne({ _id: req.params.id });
+    const { email, otpCode } = req.body;
 
-    if (!user) return res.status(400).send({ message: "Invalid Link" });
+    const user = await UserModel.findOne({ email });
 
-    let token = await TokenModel.findOne({ verifyUser: user._id });
-
-    // Check if the token has expired
-    if (token.verificationTokenExpire < Date.now()) {
-      return res.status(400).send({ message: "Token expired" });
+    if (!user) {
+      return res.status(400).send({ message: "User not found" });
     }
 
-    // If a token exists for the user, update it; otherwise, create a new one
-    if (token) {
-      token.token = req.params.token;
-      await token.save();
-    } else {
-      token = new TokenModel({
-        verifyUser: user._id,
-        token: req.params.token,
-      });
-      await token.save();
+    // Check if the OTP is correct and has not expired (assuming expiration is 5 minutes)
+    const isOTPValid =
+      user.otpCode.code === otpCode &&
+      new Date() - user.otpCode.createdAt <= 5 * 60 * 1000;
+
+    if (!isOTPValid) {
+      return res.status(400).send({ message: "Invalid or expired OTP" });
     }
 
-    await UserModel.updateOne(
-      { _id: req.params.id },
-      { $set: { verified: true } }
-    );
+    // Update user verification status
+    user.isVerified = true;
+    user.otpCode = { code: null, createdAt: null }; // Clear OTP after successful verification
+    await user.save();
 
-    // Delete the token after successful verification
-    await TokenModel.deleteOne({ verifyUser: user._id });
-
-    res.status(200).json({ message: "Email verified successfully" });
+    return res
+      .status(200)
+      .send({ success: true, message: "Email verified successfully" });
   } catch (error) {
+    console.error(error);
+    return next(new ErrorHandler("Internal server error", 500));
+  }
+};
+
+exports.sendOTP = async (req, res, next) => {
+  try {
+    const email = req.body.email;
+    const user = await UserModel.findOne({ email });
+
+    if (!user) {
+      return res.status(400).send({ message: "User not found" });
+    }
+
+    // Check if an OTP was recently sent (within the last 5 minutes)
+    if (
+      user.otpCode.createdAt &&
+      new Date() - user.otpCode.createdAt < 5 * 60 * 1000
+    ) {
+      return res.status(400).send({
+        message:
+          "Please wait 5 minutes before requesting a new verification code",
+      });
+    }
+
+    const generateRandomCode = () => {
+      return Math.floor(100000 + Math.random() * 900000).toString();
+    };
+
+    // Generate a random OTP code
+    const code = generateRandomCode();
+
+    const emailContent = `
+        <div style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 30px;">
+          <div style="max-width: 600px; margin: auto; background-color: #ffffff; padding: 30px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); text-align: center;">
+            <h1 style="font-size: 28px; color: #333333; margin-bottom: 20px;">Email Verification Request</h1>
+            <p style="font-size: 16px; color: #333333; margin-bottom: 15px;">Hello <strong>${user.firstname}</strong>,</p>
+            <p style="font-size: 16px; color: #555555; margin-bottom: 20px;">Thank you for signing up with Go Virtuals. To complete your registration, please verify your email address using the OTP code below:</p>
+            <div style="font-size: 26px; color: #007bff; font-weight: bold; background-color: #f0f8ff; padding: 15px; border-radius: 5px; display: inline-block; margin-bottom: 20px;">${code}</div>
+            <p style="font-size: 16px; color: #555555; margin-bottom: 20px;">If you did not request this, you can safely ignore this email.</p>
+            <p style="font-size: 14px; color: #888888; margin-bottom: 20px; line-height: 1.5;">Please note: Your security is important to us. We will never ask you to share your password or other sensitive information via email.</p>
+            <p style="font-size: 16px; color: #555555;">Best regards,<br><strong>Go Virtuals</strong></p>
+          </div>
+        </div>
+      `;
+
+
+    await sendMail(email, "Go Virtuals - OTP", emailContent, true);
+
+    // Update user's OTP code and creation time
+    user.otpCode.code = code;
+    user.otpCode.createdAt = new Date();
+    await user.save();
+
+    return res
+      .status(200)
+      .json({ success: true, message: "Email OTP sent successfully" });
+  } catch (error) {
+    console.error(error);
     return next(new ErrorHandler("Internal server error", 500));
   }
 };
@@ -62,7 +112,7 @@ exports.registerUser = async (req, res, next) => {
     }
 
     if (existingEmailUser) {
-      return next(new ErrorHandler("Email address already exist!", 400));
+      return next(new ErrorHandler("Email address already exists!", 400));
     }
 
     if (existingPhoneUser) {
@@ -83,7 +133,7 @@ exports.registerUser = async (req, res, next) => {
       address,
     } = req.body;
 
-    // Create the user
+    // Create the user without setting isVerified to true
     const user = await UserModel.create({
       firstname,
       lastname,
@@ -96,47 +146,15 @@ exports.registerUser = async (req, res, next) => {
       province,
       city,
       address,
+      isVerified: false,
     });
 
-    // Generate a verification token
-    const token = await new TokenModel({
-      verifyUser: user._id,
-      token: crypto.randomBytes(32).toString("hex"),
-      verificationTokenExpire: new Date(Date.now() + 2 * 60 * 1000),
-    }).save();
-
-    const emailVerification = `${process.env.FRONTEND_URL}/verify/email/${token.token}/${user._id}`;
-
-    // Email content
-    const emailContent = `
-            <div style="font-family: Arial, sans-serif; background-color: #f9f9f9; padding: 15px; justify-content: center; align-items: center; height: 40vh;">
-                <div style="background-color: #ffffff; padding: 20px; border-radius: 5px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); text-align: center;">
-                    <h1 style="font-size: 24px; color: #333;">Email Verification Request</h1>
-                    <p style="font-size: 16px; color: #555;">Hello ${user.firstname},</p>
-                    <p style="font-size: 16px; color: #555;">Thank you for signing up with Go Virtuals. To complete your registration, please verify your email address by clicking the button below:</p>
-                    <p style="text-align: center;">
-                        <a href="${emailVerification}" style="display: inline-block; background-color: #007bff; color: #fff; padding: 10px 20px; text-decoration: none; border-radius: 10px; font-size: 16px;" target="_blank">Verify Email</a>
-                    </p>
-                    <p style="font-size: 16px; color: #555;">If you did not request this, you can safely ignore this email.</p>
-                    <p style="font-size: 16px; color: #555;">Please note: Your security is important to us. We will never ask you to share your password or other sensitive information via email.</p>
-                    <p style="font-size: 16px; color: #555;">Best regards,<br>Go Virtuals</p>
-                </div>
-            </div>
-        `;
-
-    // Send email
-    await sendMail(user.email, "Go Virtual - Verify Email", emailContent, true);
-
-    // Respond to the client
-    res
-      .status(200)
-      .json({
-        success: true,
-        message: `Email sent to: ${user.email}. Please check your inbox.`,
-      });
+    // Send OTP for verification using the created user
+    req.body.email = user.email; // Set the email in req.body to match the newly created user's email
+    await exports.sendOTP(req, res, next);
   } catch (error) {
     console.error(error);
-    res
+    return res
       .status(500)
       .json({ success: false, message: "User registration failed" });
   }
@@ -161,60 +179,7 @@ exports.loginUser = async (req, res, next) => {
     if (!isPasswordMatched) {
       return next(new ErrorHandler("Invalid Email or Password", 401));
     }
-
-    if (!user.verified) {
-      let token = await TokenModel.findOne({ verifyUser: user._id });
-
-      if (!token || token.verificationTokenExpire < Date.now()) {
-        token = await TokenModel.findOneAndUpdate(
-          { verifyUser: user._id },
-          {
-            token: crypto.randomBytes(32).toString("hex"),
-            verificationTokenExpire: Date.now() + 2 * 60 * 1000,
-          },
-          { new: true, upsert: true }
-        );
-
-        const emailVerification = `${process.env.FRONTEND_URL}/verify/email/${token.token}/${user._id}`;
-
-        const emailContent = `
-                    <div style="font-family: Arial, sans-serif; background-color: #f9f9f9; padding: 15px; justify-content: center; align-items: center; height: 40vh;">
-                        <div style="background-color: #ffffff; padding: 20px; border-radius: 5px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); text-align: center;">
-                            <h1 style="font-size: 24px; color: #333;">Email Verification Request</h1>
-                            <p style="font-size: 16px; color: #555;">Hello ${user.firstname},</p>
-                            <p style="font-size: 16px; color: #555;">Thank you for signing up with Go Virtuals. To complete your registration, please verify your email address by clicking the button below:</p>
-                            <p style="text-align: center;">
-                                <a href="${emailVerification}" style="display: inline-block; background-color: #007bff; color: #fff; padding: 10px 20px; text-decoration: none; border-radius: 10px; font-size: 16px;" target="_blank">Verify Email</a>
-                            </p>
-                            <p style="font-size: 16px; color: #555;">If you did not request this, you can safely ignore this email.</p>
-                            <p style="font-size: 16px; color: #555;">Please note: Your security is important to us. We will never ask you to share your password or other sensitive information via email.</p>
-                            <p style="font-size: 16px; color: #555;">Best regards,<br>Go Virtuals</p>
-                        </div>
-                    </div>
-                `;
-
-        await sendMail(
-          user.email,
-          "Go Virtuals - Verify Email",
-          emailContent,
-          true
-        );
-
-        return res.status(403).json({
-          success: false,
-          message: "Token expired! A new one has been sent to your email.",
-        });
-      } else {
-        return next(
-          new ErrorHandler(
-            "Please check your email for the verification link.",
-            403
-          )
-        );
-      }
-    } else {
-      return sendToken(user, 200, res);
-    }
+    return sendToken(user, 200, res);
   } catch (error) {
     console.error(error);
     return next(new ErrorHandler("Internal server error", 500));
@@ -222,233 +187,246 @@ exports.loginUser = async (req, res, next) => {
 };
 
 exports.getProfile = async (req, res, next) => {
-    try {
-      const user = await UserModel.findById(req.user.id);
-      if (!user) {
-        return next(new ErrorHandler("User not found", 404));
-      }
-      res.status(200).json({
-        success: true,
-        user,
-      });
-    } catch (error) {
-      console.error(error);
-      return next(new ErrorHandler("Failed to get user profile", 500));
+  try {
+    const user = await UserModel.findById(req.user.id);
+    if (!user) {
+      return next(new ErrorHandler("User not found", 404));
     }
+    res.status(200).json({
+      success: true,
+      user,
+    });
+  } catch (error) {
+    console.error(error);
+    return next(new ErrorHandler("Failed to get user profile", 500));
+  }
 };
 
 exports.updatePassword = async (req, res, next) => {
-    try {
-      // Find user by ID
-      const user = await UserModel.findById(req.user.id).select("password");
-  
-      // Check if user exists
-      if (!user) {
-        return next(new ErrorHandler("User not found", 404));
-      }
-  
-      // Check if the old password is correct
-      const isMatched = await user.comparePassword(req.body.oldPassword);
-      if (!isMatched) {
-        return next(new ErrorHandler("Old password is incorrect", 400));
-      }
-  
-      // Update password
-      user.password = req.body.password;
-      await user.save();
-  
-      // Send success response
-      sendToken(user, 200, res);
-    } catch (error) {
-        console.error(error.message);
-        return next(new ErrorHandler("Internal server error", 500));
+  try {
+    // Find user by ID
+    const user = await UserModel.findById(req.user.id).select("password");
+
+    // Check if user exists
+    if (!user) {
+      return next(new ErrorHandler("User not found", 404));
     }
+
+    // Check if the old password is correct
+    const isMatched = await user.comparePassword(req.body.oldPassword);
+    if (!isMatched) {
+      return next(new ErrorHandler("Old password is incorrect", 400));
+    }
+
+    // Update password
+    user.password = req.body.password;
+    await user.save();
+
+    // Send success response
+    sendToken(user, 200, res);
+  } catch (error) {
+    console.error(error.message);
+    return next(new ErrorHandler("Internal server error", 500));
+  }
 };
 
 exports.updateProfile = async (req, res, next) => {
-    try {
-        const existingPhoneUser = await UserModel.findOne({
-            phone: req.body.mobileNumber,
-          });
-          if (existingPhoneUser) {
-            return next(new ErrorHandler("Mobile number already taken!", 400));
-          }
-          
-      const newUserData = {
-        firstname: req.body.firstname,
-        lastname: req.body.lastname,
-        gender: req.body.gender,
-        phone: req.body.phone,
-        region: req.body.region,
-        province: req.body.province,
-        city: req.body.city,
-        barangay: req.body.barangay,
-        postalcode: req.body.postalcode,
-        address: req.body.address,
-      };
-  
-      /** Update Avatar */
-      if (req.body.avatar !== "") {
-        const user = await UserModel.findById(req.user.id);
-  
-        // Check if the user has an existing avatar
-        if (user.avatar && user.avatar.public_id) {
-          const image_id = user.avatar.public_id;
-  
-          // Destroy the previous avatar
-          await cloudinary.v2.uploader.destroy(image_id);
+  try {
+    const existingPhoneUser = await UserModel.findOne({
+      phone: req.body.mobileNumber,
+    });
+    if (existingPhoneUser) {
+      return next(new ErrorHandler("Mobile number already taken!", 400));
+    }
+
+    const newUserData = {
+      firstname: req.body.firstname,
+      lastname: req.body.lastname,
+      gender: req.body.gender,
+      phone: req.body.phone,
+      region: req.body.region,
+      province: req.body.province,
+      city: req.body.city,
+      barangay: req.body.barangay,
+      postalcode: req.body.postalcode,
+      address: req.body.address,
+    };
+
+    /** Update Avatar */
+    if (req.body.avatar !== "") {
+      const user = await UserModel.findById(req.user.id);
+
+      // Check if the user has an existing avatar
+      if (user.avatar && user.avatar.public_id) {
+        const image_id = user.avatar.public_id;
+
+        // Destroy the previous avatar
+        await cloudinary.v2.uploader.destroy(image_id);
+      }
+
+      // Upload the new avatar
+      const uploadResult = await cloudinary.v2.uploader.upload(
+        req.body.avatar,
+        {
+          folder: "avatars",
+          width: 150,
+          crop: "scale",
         }
-  
-        // Upload the new avatar
-        const uploadResult = await cloudinary.v2.uploader.upload(
-          req.body.avatar,
-          {
-            folder: "avatars",
-            width: 150,
-            crop: "scale",
-          }
-        );
-  
-        newUserData.avatar = {
-          public_id: uploadResult.public_id,
-          url: uploadResult.secure_url,
-        };
-      }
-  
-      // Update the user profile
-      const user = await UserModel.findByIdAndUpdate(req.user.id, newUserData, {
-        new: true,
-        runValidators: true,
-      });
-  
-      if (!user) {
-        return res.status(404).json({
-          success: false,
-          message: "User not found",
-        });
-      }
-  
-      res.status(200).json({
-        success: true,
-        user,
-      });
-    } catch (error) {
-      console.error(error);
-      return res.status(500).json({
-        success: false,
-        message: "An error occurred while updating the profile",
-        error: error.message,
-      });
-    }
-};
-
-exports.forgotPassword = async (req, res, next) => {
-  try {
-    const user = await UserModel.findOne({ email: req.body.email });
-
-    if (!user) {
-      return next(new ErrorHandler("User not found with this email", 400));
-    }
-
-    // Check if the user is activated
-    if (!user.verified) {
-        return next(new ErrorHandler("You don't have access!", 403));
-      }
-
-    const resetToken = user.getResetPasswordToken();
-    await user.save({ validateBeforeSave: false });
-
-    const resetUrl = `${process.env.FRONTEND_URL}/password/reset/${resetToken}`;
-
-    // HTML content for the email
-    const emailContent = `
-          <div style="font-family: Arial, sans-serif; background-color: #f9f9f9; padding: 15px; justify-content: center; align-items: center; height: 40vh;">
-              <div style="background-color: #ffffff; padding: 20px; border-radius: 5px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); text-align: center;">
-                  <h1 style="font-size: 24px; color: #333;">Password Reset Request</h1>
-                  <p style="font-size: 16px; color: #555;">Hello ${user.firstname},</p>
-                  <p style="font-size: 16px; color: #555;">You have requested to reset your password. To proceed, please click the button below:</p>
-                  <p style="text-align: center;">
-                      <a href="${resetUrl}" style="display: inline-block; background-color: #007bff; color: #fff; padding: 10px 20px; text-decoration: none; border-radius: 10px; font-size: 16px;" target="_blank">Reset Password</a>
-                  </p>
-                  <p style="font-size: 16px; color: #555;">If you didn't request this, you can safely ignore this email.</p>
-                  <p style="font-size: 16px; color: #555;">Best regards,<br>Go Virtuals</p>
-              </div>
-          </div>
-      `;
-
-    try {
-      await sendMail(
-        user.email,
-        "Go Virtuals- Password Recovery",
-        emailContent,
-        true
       );
 
-      res
-        .status(200)
-        .json({ success: true, message: `Email sent to: ${user.email}` });
-    } catch (emailError) {
-      // Handle email sending error
-      user.resetPasswordToken = undefined;
-      user.resetPasswordExpire = undefined;
-
-      await user.save({ validateBeforeSave: false });
-      return next(
-        new ErrorHandler("There was an error sending the email", 500)
-      );
+      newUserData.avatar = {
+        public_id: uploadResult.public_id,
+        url: uploadResult.secure_url,
+      };
     }
-  } catch (error) {
-    console.log(error);
-    return next(
-      new ErrorHandler("An error occurred while processing your request", 500)
-    );
-  }
-};
 
-exports.resetPassword = async (req, res, next) => {
-  // Hash URL token
-  const resetPasswordToken = crypto
-    .createHash("sha256")
-    .update(req.params.token)
-    .digest("hex");
-
-  try {
-    const user = await UserModel.findOne({
-      resetPasswordToken,
-      resetPasswordExpire: { $gt: Date.now() },
+    // Update the user profile
+    const user = await UserModel.findByIdAndUpdate(req.user.id, newUserData, {
+      new: true,
+      runValidators: true,
     });
 
     if (!user) {
-      return next(
-        new ErrorHandler(
-          "Password reset token is invalid or has been expired",
-          400
-        )
-      );
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
     }
-
-    const newPassword = req.body.password;
-    const confirmPassword = req.body.confirmPassword;
-
-    if (newPassword !== confirmPassword) {
-      return next(new ErrorHandler("Passwords do not match", 400));
-    }
-
-    // Setup new password
-    user.password = newPassword;
-    user.resetPasswordToken = undefined;
-    user.resetPasswordExpire = undefined;
-
-    await user.save();
 
     res.status(200).json({
       success: true,
-      message: "Password reset successfully!",
+      user,
     });
   } catch (error) {
-    return next(new ErrorHandler(error.message, 500));
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      message: "An error occurred while updating the profile",
+      error: error.message,
+    });
   }
 };
+
+exports.forgotPassword = async (req, res, next) => {
+    try {
+      const { email, otpCode } = req.body;
+      const user = await UserModel.findOne({ email });
+  
+      if (!user) {
+        return next(new ErrorHandler("User not found with this email", 400));
+      }
+  
+      // Check if the user is verified
+      if (!user.isVerified) {
+        return next(new ErrorHandler("You don't have access!", 403));
+      }
+  
+      // Verify OTP if provided
+      if (otpCode) {
+        const isOTPValid =
+          user.otpCode.code === otpCode &&
+          new Date() - user.otpCode.createdAt <= 5 * 60 * 1000; // 5 minutes validity
+  
+        if (!isOTPValid) {
+          return next(new ErrorHandler("Invalid or expired OTP", 400));
+        }
+  
+        // Clear OTP after successful verification
+        user.otpCode = { code: null, createdAt: null };
+        await user.save();
+  
+        return res
+          .status(200)
+          .json({ success: true, message: "OTP verified successfully" });
+  
+      } else {
+
+        const generateRandomCode = () => {
+          return Math.floor(100000 + Math.random() * 900000).toString();
+        };
+  
+        const code = generateRandomCode();
+  
+        const emailContent = `
+            <div style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 30px;">
+              <div style="max-width: 600px; margin: auto; background-color: #ffffff; padding: 30px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); text-align: center;">
+                <h1 style="font-size: 28px; color: #333333; margin-bottom: 20px;">Password Reset Request</h1>
+                <p style="font-size: 16px; color: #333333; margin-bottom: 15px;">Hello <strong>${user.firstname}</strong>,</p>
+                <p style="font-size: 16px; color: #555555; margin-bottom: 20px;">You have requested to reset your password. Use the OTP code below to proceed with the password reset:</p>
+                <div style="font-size: 26px; color: #007bff; font-weight: bold; background-color: #f0f8ff; padding: 15px; border-radius: 5px; display: inline-block; margin-bottom: 20px;">${code}</div>
+                <p style="font-size: 16px; color: #555555; margin-bottom: 20px;">If you didn't request this, you can safely ignore this email.</p>
+                <p style="font-size: 14px; color: #888888; margin-bottom: 20px; line-height: 1.5;">Please note: Your security is important to us. We will never ask you to share your password or other sensitive information via email.</p>
+                <p style="font-size: 16px; color: #555555;">Best regards,<br><strong>Go Virtuals</strong></p>
+              </div>
+            </div>
+          `;
+  
+        try {
+          await sendMail(
+            user.email,
+            "Go Virtuals - OTP for Password Reset",
+            emailContent,
+            true
+          );
+  
+          // Update user's OTP code and creation time
+          user.otpCode.code = code;
+          user.otpCode.createdAt = new Date();
+          await user.save();
+  
+          return res
+            .status(200)
+            .json({ success: true, message: "OTP sent successfully" });
+        } catch (emailError) {
+          // Handle email sending error
+          user.otpCode = { code: null, createdAt: null };
+          await user.save({ validateBeforeSave: false });
+          return next(
+            new ErrorHandler("There was an error sending the OTP email", 500)
+          );
+        }
+      }
+    } catch (error) {
+      console.log(error);
+      return next(
+        new ErrorHandler("An error occurred while processing your request", 500)
+      );
+    }
+};
+  
+
+exports.resetPassword = async (req, res, next) => {
+    const { otpCode, password, confirmPassword } = req.body;
+  
+    if (!otpCode) {
+      return next(new ErrorHandler("OTP is missing", 400));
+    }
+  
+    try {
+      const user = await UserModel.findOne({
+        "otpCode.code": otpCode,
+        "otpCode.createdAt": { $gt: new Date(Date.now() - 5 * 60 * 1000) } // 5 minutes validity
+      });
+  
+      if (!user) {
+        return next(new ErrorHandler("Invalid or expired OTP", 400));
+      }
+  
+      if (password !== confirmPassword) {
+        return next(new ErrorHandler("Passwords do not match", 400));
+      }
+  
+      user.password = password;
+      user.otpCode = { code: null, createdAt: null }; // Clear OTP
+      await user.save();
+  
+      res.status(200).json({ success: true, message: "Password reset successfully!" });
+    } catch (error) {
+      return next(new ErrorHandler(error.message, 500));
+    }
+  };
+  
+  
 
 exports.logoutUser = async (req, res, next) => {
   try {

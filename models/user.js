@@ -94,12 +94,20 @@ const userSchema = new mongoose.Schema({
         type: Date,
         default: Date.now
     },
-    verified: {
+    otpCode: {
+        code: {
+          type: String,
+          default: null,
+        },
+        createdAt: {
+          type: Date,
+          default: null,
+        },
+      },
+      isVerified: {
         type: Boolean,
         default: false
-    },
-    resetPasswordToken: String,
-    resetPasswordExpire: Date,
+      },
 });
 
 // JWT Token generation method
