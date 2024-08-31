@@ -92,7 +92,6 @@ const userSchema = new mongoose.Schema({
         code: {
           type: String,
           default: null,
-          unique: true,
         },
         createdAt: {
           type: Date,
