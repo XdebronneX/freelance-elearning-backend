@@ -1,11 +1,11 @@
 const express = require("express")
 const router = express.Router()
 const { isAuthenticatedUser, authorizeRoles } = require("../middlewares/auth")
-const { registerUser, loginUser, getProfile, updatePassword, updateProfile, forgotPassword, resetPassword, logoutUser, verifyOTP, sendOTP} = require("../controllers/userController");
+const { registerUser, loginUser, getProfile, updatePassword, updateProfile, forgotPassword, resetPassword, logoutUser, verifyOTP, resendOTP} = require("../controllers/userController");
 const upload = require("../utils/multerImg");
 
 router.route('/register').post(registerUser);
-router.route('/send/verification').post(sendOTP);
+router.route('/send/verification').post(resendOTP);
 router.route('/verification').post(verifyOTP);
 router.route('/login').post(loginUser);
 router.get('/me', isAuthenticatedUser, getProfile);

@@ -27,14 +27,8 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: [true, 'Please enter your password'],
         minlength: [8, 'Your password must be at least 8 characters long'],
-        maxlength: [20, 'Your password must not exceed 20 characters.'],
+        maxlength: [100, 'Your password must not exceed 100 characters'],
         select: false,
-        validate: {
-            validator: function (v) {
-                return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,20}$/.test(v);
-            },
-            message: 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character.'
-        }
     },    
     mobileNumber: {
         type: String,
@@ -98,6 +92,7 @@ const userSchema = new mongoose.Schema({
         code: {
           type: String,
           default: null,
+          unique: true,
         },
         createdAt: {
           type: Date,

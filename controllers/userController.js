@@ -6,160 +6,212 @@ const sendMail = require("../utils/sendMail");
 const bcrypt = require("bcryptjs");
 
 exports.verifyOTP = async (req, res, next) => {
-  try {
-    const { email, otpCode } = req.body;
-
-    const user = await UserModel.findOne({ email });
-
-    if (!user) {
-      return res.status(400).send({ message: "User not found" });
+    try {
+      const { otpCode } = req.body;
+  
+      // Validate that OTP code is provided
+      if (!otpCode) {
+        return res.status(400).send({ message: "OTP code is required" });
+      }
+  
+      // Find the user based on OTP code
+      const user = await UserModel.findOne({ 'otpCode.code': otpCode });
+  
+      if (!user) {
+        return res.status(404).send({ message: "User not found or invalid OTP" });
+      }
+  
+      // Check if the OTP has not expired (assuming expiration is 5 minutes)
+      const isOTPValid =
+        user.otpCode.code === otpCode &&
+        new Date() - user.otpCode.createdAt <= 5 * 60 * 1000;
+  
+      if (!isOTPValid) {
+        return res.status(400).send({ message: "Invalid or expired OTP" });
+      }
+  
+      // Update user verification status
+      user.isVerified = true;
+      user.otpCode = { code: null, createdAt: null }; // Clear OTP after successful verification
+      await user.save();
+  
+      return res.status(200).send({ success: true, message: "Email verified successfully" });
+    } catch (error) {
+      console.error(error);
+      return next(new ErrorHandler("Internal server error", 500));
     }
-
-    // Check if the OTP is correct and has not expired (assuming expiration is 5 minutes)
-    const isOTPValid =
-      user.otpCode.code === otpCode &&
-      new Date() - user.otpCode.createdAt <= 5 * 60 * 1000;
-
-    if (!isOTPValid) {
-      return res.status(400).send({ message: "Invalid or expired OTP" });
-    }
-
-    // Update user verification status
-    user.isVerified = true;
-    user.otpCode = { code: null, createdAt: null }; // Clear OTP after successful verification
-    await user.save();
-
-    return res
-      .status(200)
-      .send({ success: true, message: "Email verified successfully" });
-  } catch (error) {
-    console.error(error);
-    return next(new ErrorHandler("Internal server error", 500));
-  }
 };
+  
+// exports.resendOTP = async (req, res, next) => {
+//     try {
 
-exports.sendOTP = async (req, res, next) => {
-  try {
-    const email = req.body.email;
-    const user = await UserModel.findOne({ email });
-
-    if (!user) {
-      return res.status(400).send({ message: "User not found" });
-    }
-
-    // Check if an OTP was recently sent (within the last 5 minutes)
-    if (
-      user.otpCode.createdAt &&
-      new Date() - user.otpCode.createdAt < 5 * 60 * 1000
-    ) {
-      return res.status(400).send({
-        message:
-          "Please wait 5 minutes before requesting a new verification code",
-      });
-    }
-
-    const generateRandomCode = () => {
-      return Math.floor(100000 + Math.random() * 900000).toString();
-    };
-
-    // Generate a random OTP code
-    const code = generateRandomCode();
-
-    const emailContent = `
+//       const user = await UserModel.findOne({});
+  
+//       if (!user) {
+//         return res.status(404).send({ message: "User not found" });
+//       }
+  
+//       // Generate a new OTP code
+//       const generateRandomCode = () => {
+//         return Math.floor(100000 + Math.random() * 900000).toString();
+//       };
+//       const newCode = generateRandomCode();
+  
+//       const emailContent = `
+//         <div style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 30px;">
+//           <div style="max-width: 600px; margin: auto; background-color: #ffffff; padding: 30px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); text-align: center;">
+//             <h1 style="font-size: 28px; color: #333333; margin-bottom: 20px;">Email Verification Request</h1>
+//             <p style="font-size: 16px; color: #333333; margin-bottom: 15px;">Hello <strong>${user.firstname}</strong>,</p>
+//             <p style="font-size: 16px; color: #555555; margin-bottom: 20px;">Thank you for signing up with Go Virtuals. To complete your registration, please verify your email address using the OTP code below:</p>
+//             <div style="font-size: 26px; color: #007bff; font-weight: bold; background-color: #f0f8ff; padding: 15px; border-radius: 5px; display: inline-block; margin-bottom: 20px;">${newCode}</div>
+//             <p style="font-size: 16px; color: #555555; margin-bottom: 20px;">If you did not request this, you can safely ignore this email.</p>
+//             <p style="font-size: 14px; color: #888888; margin-bottom: 20px; line-height: 1.5;">Please note: Your security is important to us. We will never ask you to share your password or other sensitive information via email.</p>
+//             <p style="font-size: 16px; color: #555555;">Best regards,<br><strong>Go Virtuals</strong></p>
+//           </div>
+//         </div>
+//       `;
+  
+//       await sendMail(user.email, "Go Virtuals - OTP", emailContent, true);
+  
+//       // Update user's OTP code and creation time
+//       user.otpCode.code = newCode;
+//       user.otpCode.createdAt = new Date();
+//       await user.save();
+  
+//       return res.status(200).json({ success: true, message: "Email OTP resent successfully" });
+//     } catch (error) {
+//       console.error(error);
+//       return next(new ErrorHandler("Internal server error", 500));
+//     }
+// };
+  
+exports.resendOTP = async (req, res, next) => {
+    try {
+        const { email } = req.body;
+        const user = await UserModel.findOne({ email });
+  
+      if (!user) {
+        return res.status(404).send({ message: "User not found" });
+      }
+  
+      // Generate a new OTP code
+      const generateRandomCode = () => {
+        return Math.floor(100000 + Math.random() * 900000).toString();
+      };
+      const newCode = generateRandomCode();
+  
+      const emailContent = `
         <div style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 30px;">
           <div style="max-width: 600px; margin: auto; background-color: #ffffff; padding: 30px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); text-align: center;">
             <h1 style="font-size: 28px; color: #333333; margin-bottom: 20px;">Email Verification Request</h1>
             <p style="font-size: 16px; color: #333333; margin-bottom: 15px;">Hello <strong>${user.firstname}</strong>,</p>
             <p style="font-size: 16px; color: #555555; margin-bottom: 20px;">Thank you for signing up with Go Virtuals. To complete your registration, please verify your email address using the OTP code below:</p>
-            <div style="font-size: 26px; color: #007bff; font-weight: bold; background-color: #f0f8ff; padding: 15px; border-radius: 5px; display: inline-block; margin-bottom: 20px;">${code}</div>
+            <div style="font-size: 26px; color: #007bff; font-weight: bold; background-color: #f0f8ff; padding: 15px; border-radius: 5px; display: inline-block; margin-bottom: 20px;">${newCode}</div>
             <p style="font-size: 16px; color: #555555; margin-bottom: 20px;">If you did not request this, you can safely ignore this email.</p>
             <p style="font-size: 14px; color: #888888; margin-bottom: 20px; line-height: 1.5;">Please note: Your security is important to us. We will never ask you to share your password or other sensitive information via email.</p>
             <p style="font-size: 16px; color: #555555;">Best regards,<br><strong>Go Virtuals</strong></p>
           </div>
         </div>
       `;
-
-
-    await sendMail(email, "Go Virtuals - OTP", emailContent, true);
-
-    // Update user's OTP code and creation time
-    user.otpCode.code = code;
-    user.otpCode.createdAt = new Date();
-    await user.save();
-
-    return res
-      .status(200)
-      .json({ success: true, message: "Email OTP sent successfully" });
-  } catch (error) {
-    console.error(error);
-    return next(new ErrorHandler("Internal server error", 500));
-  }
+  
+      await sendMail(user.email, "Go Virtuals - OTP", emailContent, true);
+  
+      // Update user's OTP code and creation time
+      user.otpCode.code = newCode;
+      user.otpCode.createdAt = new Date();
+      await user.save();
+  
+      return res.status(200).json({ success: true, message: "Email OTP resent successfully" });
+    } catch (error) {
+      console.error(error);
+      return next(new ErrorHandler("Internal server error", 500));
+    }
 };
 
 exports.registerUser = async (req, res, next) => {
-  try {
-    const existingEmailUser = await UserModel.findOne({
-      email: req.body.email,
-    });
-    const existingPhoneUser = await UserModel.findOne({
-      phone: req.body.mobileNumber,
-    });
-
-    if (existingEmailUser && existingPhoneUser) {
-      return next(
-        new ErrorHandler("Email and mobile number already exist!", 400)
-      );
+    try {
+      const {
+        firstname, lastname, email, password, mobileNumber, birthDate, gender, country, province, city, address
+      } = req.body;
+  
+      // Validate password length and criteria
+      if (password.length < 8 || password.length > 100) {
+        return next(new ErrorHandler("Password must be between 8 and 100 characters long.", 400));
+      }
+      const passwordValid = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,100}$/.test(password);
+      if (!passwordValid) {
+        return next(new ErrorHandler("Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character.", 400));
+      }
+  
+      const existingEmailUser = await UserModel.findOne({ email });
+      const existingMobileNumber = await UserModel.findOne({ mobileNumber });
+  
+      if (existingEmailUser && existingMobileNumber) {
+        return next(new ErrorHandler("Email and mobile number already exist!", 400));
+      }
+  
+      if (existingEmailUser) {
+        return next(new ErrorHandler("Email address already exists!", 400));
+      }
+  
+      if (existingMobileNumber) {
+        return next(new ErrorHandler("Mobile number already exists!", 400));
+      }
+  
+      // Create the user with isVerified set to false
+      const user = await UserModel.create({
+        firstname,
+        lastname,
+        email,
+        password,
+        mobileNumber,
+        birthDate,
+        gender,
+        country,
+        province,
+        city,
+        address,
+        isVerified: false,
+        otpCode: { code: null, createdAt: null }
+      });
+  
+      // Generate and set OTP
+      const generateRandomCode = () => (Math.floor(100000 + Math.random() * 900000).toString());
+      const otpCode = generateRandomCode();
+      user.otpCode.code = otpCode;
+      user.otpCode.createdAt = new Date();
+  
+      await user.save();
+  
+      // Construct OTP content
+      const emailContent = `
+          <div style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 30px;">
+            <div style="max-width: 600px; margin: auto; background-color: #ffffff; padding: 30px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); text-align: center;">
+              <h1 style="font-size: 28px; color: #333333; margin-bottom: 20px;">Welcome to Go Virtuals</h1>
+              <p style="font-size: 16px; color: #555555; margin-bottom: 20px;">Hello <strong>${user.firstname}</strong>,</p>
+              <p style="font-size: 16px; color: #555555; margin-bottom: 20px;">Please use the OTP code below to verify your email and complete your registration:</p>
+              <div style="font-size: 26px; color: #007bff; font-weight: bold; background-color: #f0f8ff; padding: 15px; border-radius: 5px; display: inline-block; margin-bottom: 20px;">${otpCode}</div>
+              <p style="font-size: 16px; color: #555555; margin-bottom: 20px;">If you didn’t request this, you can safely ignore this email.</p>
+              <p style="font-size: 16px; color: #555555;">Best regards,<br><strong>Go Virtuals</strong></p>
+            </div>
+          </div>
+        `;
+  
+      try {
+        await sendMail(user.email, "Go Virtuals - OTP for Registration", emailContent, true);
+        return res.status(200).json({ success: true, message: "User registered successfully. Please check your email for OTP." });
+      } catch (emailError) {
+        user.otpCode = { code: null, createdAt: null }; // Clear OTP if email sending fails
+        await user.save({ validateBeforeSave: false });
+        return next(new ErrorHandler("There was an error sending the OTP email", 500));
+      }
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ success: false, message: "User registration failed" });
     }
-
-    if (existingEmailUser) {
-      return next(new ErrorHandler("Email address already exists!", 400));
-    }
-
-    if (existingPhoneUser) {
-      return next(new ErrorHandler("Mobile number already taken!", 400));
-    }
-
-    const {
-      firstname,
-      lastname,
-      email,
-      password,
-      mobileNumber,
-      birthDate,
-      gender,
-      country,
-      province,
-      city,
-      address,
-    } = req.body;
-
-    // Create the user without setting isVerified to true
-    const user = await UserModel.create({
-      firstname,
-      lastname,
-      email,
-      password,
-      mobileNumber,
-      birthDate,
-      gender,
-      country,
-      province,
-      city,
-      address,
-      isVerified: false,
-    });
-
-    // Send OTP for verification using the created user
-    req.body.email = user.email; // Set the email in req.body to match the newly created user's email
-    await exports.sendOTP(req, res, next);
-  } catch (error) {
-    console.error(error);
-    return res
-      .status(500)
-      .json({ success: false, message: "User registration failed" });
-  }
 };
-
+  
+  
 exports.loginUser = async (req, res, next) => {
   const { email, password } = req.body;
 
@@ -394,7 +446,6 @@ exports.forgotPassword = async (req, res, next) => {
     }
 };
   
-
 exports.resetPassword = async (req, res, next) => {
     const { otpCode, password, confirmPassword } = req.body;
   
@@ -424,10 +475,8 @@ exports.resetPassword = async (req, res, next) => {
     } catch (error) {
       return next(new ErrorHandler(error.message, 500));
     }
-  };
+};
   
-  
-
 exports.logoutUser = async (req, res, next) => {
   try {
     res.status(200).json({
