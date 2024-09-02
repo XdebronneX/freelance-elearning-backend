@@ -279,7 +279,7 @@ exports.loginUser = async (req, res, next) => {
     }
     // Checks if the password is correct
     const isPasswordMatched = await bcrypt.compare(password, user.password);
-
+    user.password = undefined;
     if (!isPasswordMatched) {
       return next(new ErrorHandler("Invalid Email or Password", 401));
     }
@@ -290,6 +290,7 @@ exports.loginUser = async (req, res, next) => {
     return next(new ErrorHandler("Internal server error", 500));
   }
 };
+
 
 exports.getProfile = async (req, res, next) => {
   try {
