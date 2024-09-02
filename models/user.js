@@ -73,6 +73,10 @@ const userSchema = new mongoose.Schema({
     loginType: {
         type: String,
     },
+    bio:{
+        type: String,
+        required: [true, 'Please enter your bio'],
+    },
     metaData: {
         type: String,
     },

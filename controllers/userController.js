@@ -86,52 +86,66 @@ exports.verifyOTP = async (req, res, next) => {
 // };
   
 exports.resendOTP = async (req, res, next) => {
-    try {
-        const { email } = req.body;
-        const user = await UserModel.findOne({ email });
-  
+  try {
+      const { email } = req.body;
+      const user = await UserModel.findOne({ email });
+
       if (!user) {
-        return res.status(404).send({ message: "User not found" });
+          return res.status(404).send({ message: "User not found" });
       }
-  
+
+      // Check if an OTP was previously sent
+      if (user.otpCode.createdAt) {
+          const currentTime = new Date();
+          const otpCreatedTime = new Date(user.otpCode.createdAt);
+          const minutesSinceLastOTP = Math.floor((currentTime - otpCreatedTime) / 60000);
+
+          // Allow OTP resend only if more than 5 minutes have passed
+          if (minutesSinceLastOTP < 5) {
+              return res.status(429).json({
+                  message: `Please wait ${5 - minutesSinceLastOTP} more minute(s) before requesting a new OTP.`,
+              });
+          }
+      }
+
       // Generate a new OTP code
       const generateRandomCode = () => {
-        return Math.floor(100000 + Math.random() * 900000).toString();
+          return Math.floor(100000 + Math.random() * 900000).toString();
       };
       const newCode = generateRandomCode();
-  
+
       const emailContent = `
-        <div style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 30px;">
+      <div style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 30px;">
           <div style="max-width: 600px; margin: auto; background-color: #ffffff; padding: 30px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); text-align: center;">
-            <h1 style="font-size: 28px; color: #333333; margin-bottom: 20px;">Email Verification Request</h1>
-            <p style="font-size: 16px; color: #333333; margin-bottom: 15px;">Hello <strong>${user.firstname}</strong>,</p>
-            <p style="font-size: 16px; color: #555555; margin-bottom: 20px;">Thank you for signing up with Go Virtuals. To complete your registration, please verify your email address using the OTP code below:</p>
-            <div style="font-size: 26px; color: #007bff; font-weight: bold; background-color: #f0f8ff; padding: 15px; border-radius: 5px; display: inline-block; margin-bottom: 20px;">${newCode}</div>
-            <p style="font-size: 16px; color: #555555; margin-bottom: 20px;">If you did not request this, you can safely ignore this email.</p>
-            <p style="font-size: 14px; color: #888888; margin-bottom: 20px; line-height: 1.5;">Please note: Your security is important to us. We will never ask you to share your password or other sensitive information via email.</p>
-            <p style="font-size: 16px; color: #555555;">Best regards,<br><strong>Go Virtuals</strong></p>
+              <h1 style="font-size: 28px; color: #333333; margin-bottom: 20px;">Email Verification Request</h1>
+              <p style="font-size: 16px; color: #333333; margin-bottom: 15px;">Hello <strong>${user.firstname}</strong>,</p>
+              <p style="font-size: 16px; color: #555555; margin-bottom: 20px;">Thank you for signing up with Go Virtuals. To complete your registration, please verify your email address using the OTP code below:</p>
+              <div style="font-size: 26px; color: #007bff; font-weight: bold; background-color: #f0f8ff; padding: 15px; border-radius: 5px; display: inline-block; margin-bottom: 20px;">${newCode}</div>
+              <p style="font-size: 16px; color: #555555; margin-bottom: 20px;">If you did not request this, you can safely ignore this email.</p>
+              <p style="font-size: 14px; color: #888888; margin-bottom: 20px; line-height: 1.5;">Please note: Your security is important to us. We will never ask you to share your password or other sensitive information via email.</p>
+              <p style="font-size: 16px; color: #555555;">Best regards,<br><strong>Go Virtuals</strong></p>
           </div>
-        </div>
+      </div>
       `;
-  
+
       await sendMail(user.email, "Go Virtuals - OTP", emailContent, true);
-  
+
       // Update user's OTP code and creation time
       user.otpCode.code = newCode;
       user.otpCode.createdAt = new Date();
       await user.save();
-  
+
       return res.status(200).json({ success: true, message: "Email OTP resent successfully" });
-    } catch (error) {
+  } catch (error) {
       console.error(error);
       return next(new ErrorHandler("Internal server error", 500));
-    }
+  }
 };
 
 exports.registerUser = async (req, res, next) => {
     try {
       const {
-        firstname, lastname, email, password, mobileNumber, birthDate, gender, country, province, city, address
+        firstname, lastname, email, password, mobileNumber, birthDate, gender, country, province, city, address, bio
       } = req.body;
   
       // Validate password length and criteria
@@ -171,6 +185,7 @@ exports.registerUser = async (req, res, next) => {
         province,
         city,
         address,
+        bio,
         isVerified: false,
         otpCode: { code: null, createdAt: null }
       });
@@ -210,7 +225,6 @@ exports.registerUser = async (req, res, next) => {
       return res.status(500).json({ success: false, message: "User registration failed" });
     }
 };
-  
   
 exports.loginUser = async (req, res, next) => {
   const { email, password } = req.body;
