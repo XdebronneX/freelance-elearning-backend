@@ -316,6 +316,7 @@ exports.updateProfile = async (req, res, next) => {
       barangay: req.body.barangay,
       postalcode: req.body.postalcode,
       address: req.body.address,
+      bio: req.body.bio,
     };
 
     /** Update Avatar */
