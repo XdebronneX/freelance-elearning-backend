@@ -4,74 +4,79 @@ const cloudinary = require("cloudinary");
 const sendToken = require("../utils/jwtToken");
 const sendMail = require("../utils/sendMail");
 const bcrypt = require("bcryptjs");
-
+const crypto = require("crypto");
 exports.verifyOTP = async (req, res, next) => {
-    try {
-      const { otpCode } = req.body;
-  
-      // Validate that OTP code is provided
-      if (!otpCode) {
-        return res.status(400).send({ message: "OTP code is required" });
-      }
-  
-      // Find the user based on OTP code
-      const user = await UserModel.findOne({ 'otpCode.code': otpCode });
-  
-      if (!user) {
-        return res.status(404).send({ message: "User not found or invalid OTP" });
-      }
-  
-      // Check if the OTP has not expired (assuming expiration is 5 minutes)
-      const isOTPValid =
-        user.otpCode.code === otpCode &&
-        new Date() - user.otpCode.createdAt <= 5 * 60 * 1000;
-  
-      if (!isOTPValid) {
-        return res.status(400).send({ message: "Invalid or expired OTP" });
-      }
-  
-      // Update user verification status
-      user.isVerified = true;
-      user.otpCode = { code: null, createdAt: null }; // Clear OTP after successful verification
-      await user.save();
-  
-      return res.status(200).send({ success: true, message: "Email verified successfully" });
-    } catch (error) {
-      console.error(error);
-      return next(new ErrorHandler("Internal server error", 500));
+  try {
+    const { otpCode } = req.body;
+
+    if (!otpCode) {
+      return res.status(400).json({ message: "OTP code is required" });
     }
+
+    // Find the user based on OTP code
+    const user = await UserModel.findOne({ "otpCode.code": otpCode });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found or invalid OTP" });
+    }
+
+    // Check if the OTP has not expired (assuming expiration is 5 minutes)
+    const isOTPValid =
+      user.otpCode.code === otpCode &&
+      new Date() - user.otpCode.createdAt <= 5 * 60 * 1000;
+
+    if (!isOTPValid) {
+      return res.status(400).send({ message: "Invalid or expired OTP" });
+    }
+
+    // Update user verification status
+    user.isVerified = true;
+    user.otpCode = { code: null, createdAt: null };
+    await user.save();
+
+    return res
+      .status(200)
+      .json({ success: true, message: "Email verified successfully" });
+  } catch (error) {
+    console.log(error);
+    return next(new ErrorHandler("Internal server error", 500));
+  }
 };
 
 exports.resendOTP = async (req, res, next) => {
   try {
-      const { email } = req.body;
-      const user = await UserModel.findOne({ email });
+    const { email } = req.body;
+    const user = await UserModel.findOne({ email });
 
-      if (!user) {
-          return res.status(404).send({ message: "User not found" });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Check if an OTP was previously sent
+    if (user.otpCode.createdAt) {
+      const currentTime = new Date();
+      const otpCreatedTime = new Date(user.otpCode.createdAt);
+      const minutesSinceLastOTP = Math.floor(
+        (currentTime - otpCreatedTime) / 60000
+      );
+
+      // Allow OTP resend only if more than 5 minutes have passed
+      if (minutesSinceLastOTP < 5) {
+        return res.status(429).json({
+          message: `Please wait ${
+            5 - minutesSinceLastOTP
+          } more minute(s) before requesting a new OTP.`,
+        });
       }
+    }
 
-      // Check if an OTP was previously sent
-      if (user.otpCode.createdAt) {
-          const currentTime = new Date();
-          const otpCreatedTime = new Date(user.otpCode.createdAt);
-          const minutesSinceLastOTP = Math.floor((currentTime - otpCreatedTime) / 60000);
+    // Generate a new OTP code
+    const generateRandomCode = () => {
+      return Math.floor(100000 + Math.random() * 900000).toString();
+    };
+    const newCode = generateRandomCode();
 
-          // Allow OTP resend only if more than 5 minutes have passed
-          if (minutesSinceLastOTP < 5) {
-              return res.status(429).json({
-                  message: `Please wait ${5 - minutesSinceLastOTP} more minute(s) before requesting a new OTP.`,
-              });
-          }
-      }
-
-      // Generate a new OTP code
-      const generateRandomCode = () => {
-          return Math.floor(100000 + Math.random() * 900000).toString();
-      };
-      const newCode = generateRandomCode();
-
-      const emailContent = `
+    const emailContent = `
       <div style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 30px;">
           <div style="max-width: 600px; margin: auto; background-color: #ffffff; padding: 30px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); text-align: center;">
               <h1 style="font-size: 28px; color: #333333; margin-bottom: 20px;">Email Verification Request</h1>
@@ -85,31 +90,46 @@ exports.resendOTP = async (req, res, next) => {
       </div>
       `;
 
-      await sendMail(user.email, "Go Virtual - OTP", emailContent, true);
+    await sendMail(user.email, "Go Virtual - OTP", emailContent, true);
 
-      // Update user's OTP code and creation time
-      user.otpCode.code = newCode;
-      user.otpCode.createdAt = new Date();
-      await user.save();
+    // Update user's OTP code and creation time
+    user.otpCode.code = newCode;
+    user.otpCode.createdAt = new Date();
+    await user.save();
 
-      return res.status(200).json({ success: true, message: "Email OTP resent successfully" });
+    return res
+      .status(200)
+      .json({ success: true, message: "Email OTP resent successfully" });
   } catch (error) {
-      console.error(error);
-      return next(new ErrorHandler("Internal server error", 500));
+    console.log(error);
+    return next(new ErrorHandler("Internal server error", 500));
   }
 };
 
 exports.registerUser = async (req, res, next) => {
   try {
     const {
-      firstname, lastname, email, password, mobileNumber, birthDate, gender, country, province, city, address, bio
+      firstname,
+      lastname,
+      email,
+      password,
+      mobileNumber,
+      birthDate,
+      gender,
+      country,
+      province,
+      city,
+      address,
+      bio,
     } = req.body;
 
     const existingEmailUser = await UserModel.findOne({ email });
     const existingMobileNumber = await UserModel.findOne({ mobileNumber });
 
     if (existingEmailUser && existingMobileNumber) {
-      return next(new ErrorHandler("Email and mobile number already exist!", 400));
+      return next(
+        new ErrorHandler("Email and mobile number already exist!", 400)
+      );
     }
 
     if (existingEmailUser) {
@@ -134,22 +154,22 @@ exports.registerUser = async (req, res, next) => {
       address,
       bio,
       isVerified: false,
-      otpCode: { code: null, createdAt: null }
+      otpCode: { code: null, createdAt: null },
     });
 
     try {
       await user.validate();
-      await user.save(); 
+      await user.save();
 
       // Generate and set OTP
-      const generateRandomCode = () => (Math.floor(100000 + Math.random() * 900000).toString());
+      const generateRandomCode = () =>
+        Math.floor(100000 + Math.random() * 900000).toString();
       const otpCode = generateRandomCode();
       user.otpCode.code = otpCode;
       user.otpCode.createdAt = new Date();
 
       await user.save();
 
-      // Construct OTP content
       const emailContent = `
         <div style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 30px;">
           <div style="max-width: 600px; margin: auto; background-color: #ffffff; padding: 30px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); text-align: center;">
@@ -164,29 +184,45 @@ exports.registerUser = async (req, res, next) => {
       `;
 
       try {
-        await sendMail(user.email, "Go Virtual - OTP for Registration", emailContent, true);
+        await sendMail(
+          user.email,
+          "Go Virtual - OTP for Registration",
+          emailContent,
+          true
+        );
         // Exclude the password field from the response
         const { password, ...userWithoutPassword } = user.toObject();
-        return res.status(200).json({ success: true, message: "User registered successfully. Please check your email for OTP.", user: userWithoutPassword });
+        return res.status(200).json({
+          success: true,
+          message:
+            "User registered successfully. Please check your email for OTP.",
+          user: userWithoutPassword,
+        });
       } catch (emailError) {
-        console.error("Error sending OTP email:", emailError);
-        user.otpCode = { code: null, createdAt: null }; 
+        console.log("Error sending OTP email:", emailError);
+        user.otpCode = { code: null, createdAt: null };
         await user.save({ validateBeforeSave: false });
-        return next(new ErrorHandler("There was an error sending the OTP email", 500));
+        return next(
+          new ErrorHandler("There was an error sending the OTP email", 500)
+        );
       }
-
     } catch (validationError) {
       // If validation fails, extract the first validation error message
-      const errorMessages = Object.values(validationError.errors).map(err => err.message);
-      return res.status(400).json({ success: false, message: errorMessages[0] });
+      const errorMessages = Object.values(validationError.errors).map(
+        (err) => err.message
+      );
+      return res
+        .status(400)
+        .json({ success: false, message: errorMessages[0] });
     }
-
   } catch (error) {
     console.log("Error during registration process:", error);
-    return res.status(500).json({ success: false, message: "User registration failed" });
+    return res
+      .status(500)
+      .json({ success: false, message: "User registration failed" });
   }
 };
-  
+
 exports.loginUser = async (req, res, next) => {
   const { email, password } = req.body;
 
@@ -203,7 +239,8 @@ exports.loginUser = async (req, res, next) => {
 
     if (!user.isVerified) {
       // Generate a new OTP if email is not verified
-      const generateRandomCode = () => (Math.floor(100000 + Math.random() * 900000).toString());
+      const generateRandomCode = () =>
+        Math.floor(100000 + Math.random() * 900000).toString();
       const newCode = generateRandomCode();
 
       const emailContent = `
@@ -230,15 +267,17 @@ exports.loginUser = async (req, res, next) => {
 
         return res.status(403).json({
           success: false,
-          message: "Your account is not verified. An OTP has been sent to your email address for verification."
+          message:
+            "Your account is not verified. An OTP has been sent to your email address for verification.",
         });
       } catch (emailError) {
         console.error("Error sending OTP email:", emailError);
-        return next(new ErrorHandler("There was an error sending the OTP email", 500));
+        return next(
+          new ErrorHandler("There was an error sending the OTP email", 500)
+        );
       }
     }
-
-    // Check if the password is correct
+    // Checks if the password is correct
     const isPasswordMatched = await bcrypt.compare(password, user.password);
 
     if (!isPasswordMatched) {
@@ -286,9 +325,9 @@ exports.updatePassword = async (req, res, next) => {
     // // Remove the password field before sending the response
     user.password = undefined;
 
-    sendToken(user, 200, res); 
+    sendToken(user, 200, res);
   } catch (error) {
-    console.error(error.message);
+    console.log(error.message);
     return next(new ErrorHandler("Internal server error", 500));
   }
 };
@@ -359,7 +398,7 @@ exports.updateProfile = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      user
+      user,
     });
   } catch (error) {
     console.error(error);
@@ -372,46 +411,44 @@ exports.updateProfile = async (req, res, next) => {
 };
 
 exports.forgotPassword = async (req, res, next) => {
-    try {
-      const { email, otpCode } = req.body;
-      const user = await UserModel.findOne({ email });
-  
-      if (!user) {
-        return next(new ErrorHandler("User not found with this email", 400));
-      }
-  
-      // Check if the user is verified
-      if (!user.isVerified) {
-        return next(new ErrorHandler("You don't have access!", 403));
-      }
-  
-      // Verify OTP if provided
-      if (otpCode) {
-        const isOTPValid =
-          user.otpCode.code === otpCode &&
-          new Date() - user.otpCode.createdAt <= 5 * 60 * 1000; // 5 minutes validity
-  
-        if (!isOTPValid) {
-          return next(new ErrorHandler("Invalid or expired OTP", 400));
-        }
-  
-        // Clear OTP after successful verification
-        user.otpCode = { code: null, createdAt: null };
-        await user.save();
-  
-        return res
-          .status(200)
-          .json({ success: true, message: "OTP verified successfully" });
-  
-      } else {
+  try {
+    const { email, otpCode } = req.body;
+    const user = await UserModel.findOne({ email });
 
-        const generateRandomCode = () => {
-          return Math.floor(100000 + Math.random() * 900000).toString();
-        };
-  
-        const code = generateRandomCode();
-  
-        const emailContent = `
+    if (!user) {
+      return next(new ErrorHandler("User not found with this email", 400));
+    }
+
+    // Check if the user is verified
+    if (!user.isVerified) {
+      return next(new ErrorHandler("You don't have access!", 403));
+    }
+
+    // Verify OTP if provided
+    if (otpCode) {
+      const isOTPValid =
+        user.otpCode.code === otpCode &&
+        new Date() - user.otpCode.createdAt <= 5 * 60 * 1000; // 5 minutes validity
+
+      if (!isOTPValid) {
+        return next(new ErrorHandler("Invalid or expired OTP", 400));
+      }
+
+      // Clear OTP after successful verification
+      user.otpCode = { code: null, createdAt: null };
+      await user.save();
+
+      return res
+        .status(200)
+        .json({ success: true, message: "OTP verified successfully" });
+    } else {
+      const generateRandomCode = () => {
+        return Math.floor(100000 + Math.random() * 900000).toString();
+      };
+
+      const code = generateRandomCode();
+
+      const emailContent = `
             <div style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 30px;">
               <div style="max-width: 600px; margin: auto; background-color: #ffffff; padding: 30px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); text-align: center;">
                 <h1 style="font-size: 28px; color: #333333; margin-bottom: 20px;">Password Reset Request</h1>
@@ -424,72 +461,74 @@ exports.forgotPassword = async (req, res, next) => {
               </div>
             </div>
           `;
-  
-        try {
-          await sendMail(
-            user.email,
-            "Go Virtual - OTP for Password Reset",
-            emailContent,
-            true
-          );
-  
-          // Update user's OTP code and creation time
-          user.otpCode.code = code;
-          user.otpCode.createdAt = new Date();
-          await user.save();
-  
-          return res
-            .status(200)
-            .json({ success: true, message: "OTP sent successfully" });
-        } catch (emailError) {
-          // Handle email sending error
-          user.otpCode = { code: null, createdAt: null };
-          await user.save({ validateBeforeSave: false });
-          return next(
-            new ErrorHandler("There was an error sending the OTP email", 500)
-          );
-        }
+
+      try {
+        await sendMail(
+          user.email,
+          "Go Virtual - OTP for Password Reset",
+          emailContent,
+          true
+        );
+
+        // Update user's OTP code and creation time
+        user.otpCode.code = code;
+        user.otpCode.createdAt = new Date();
+        await user.save();
+
+        return res
+          .status(200)
+          .json({ success: true, message: "OTP sent successfully" });
+      } catch (emailError) {
+        // Handle email sending error
+        user.otpCode = { code: null, createdAt: null };
+        await user.save({ validateBeforeSave: false });
+        return next(
+          new ErrorHandler("There was an error sending the OTP email", 500)
+        );
       }
-    } catch (error) {
-      console.log(error);
-      return next(
-        new ErrorHandler("An error occurred while processing your request", 500)
-      );
     }
+  } catch (error) {
+    console.log(error);
+    return next(
+      new ErrorHandler("An error occurred while processing your request", 500)
+    );
+  }
 };
-  
+
 exports.resetPassword = async (req, res, next) => {
-    const { otpCode, password, confirmPassword } = req.body;
-  
-    if (!otpCode) {
-      return next(new ErrorHandler("OTP is missing", 400));
+  const { otpCode, password, confirmPassword } = req.body;
+
+  if (!otpCode) {
+    return next(new ErrorHandler("OTP is missing", 400));
+  }
+
+  try {
+    const user = await UserModel.findOne({
+      "otpCode.code": otpCode,
+      "otpCode.createdAt": { $gt: new Date(Date.now() - 5 * 60 * 1000) }, // 5 minutes 
+    });
+
+    if (!user) {
+      return next(new ErrorHandler("Invalid or expired OTP", 400));
     }
-  
-    try {
-      const user = await UserModel.findOne({
-        "otpCode.code": otpCode,
-        "otpCode.createdAt": { $gt: new Date(Date.now() - 5 * 60 * 1000) } // 5 minutes validity
-      });
-  
-      if (!user) {
-        return next(new ErrorHandler("Invalid or expired OTP", 400));
-      }
-      
-  
-      if (password !== confirmPassword) {
-        return next(new ErrorHandler("Passwords do not match", 400));
-      }
-  
-      user.password = password;
-      user.otpCode = { code: null, createdAt: null }; // Clear OTP
-      await user.save();
-  
-      res.status(200).json({ success: true, message: "Password reset successfully!" });
-    } catch (error) {
-      return next(new ErrorHandler(error.message, 500));
+
+    if (password !== confirmPassword) {
+      return next(new ErrorHandler("Passwords do not match", 400));
     }
+
+    user.password = password;
+    user.otpCode = { code: null, createdAt: null };
+    await user.save();
+
+    res
+      .status(200)
+      .json({ success: true, message: "Password reset successfully!" });
+  } catch (error) {
+    return next(new ErrorHandler(error.message, 500));
+  }
 };
-  
+
+
 exports.logoutUser = async (req, res, next) => {
   try {
     res.status(200).json({
@@ -497,7 +536,7 @@ exports.logoutUser = async (req, res, next) => {
       message: "Logged out successfully",
     });
   } catch (error) {
-    console.error("Logout Error:", error);
+    console.log("Logout Error:", error);
 
     return next(
       new ErrorHandler("Logout failed. Please try again later.", 500)
