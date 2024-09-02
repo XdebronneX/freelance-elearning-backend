@@ -1,7 +1,7 @@
 {
 	"info": {
 		"_postman_id": "493ce265-8e61-4ede-85c5-48dc971cbb80",
-		"name": "GoVirtuals",
+		"name": "GoVirtual",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "30547403"
 	},
@@ -16,7 +16,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"firstname\": \"jacks\",\n    \"lastname\" : \"pascua\",\n    \"email\": \"123456@gmail.com\",\n    \"password\": \"Ja*45678\",\n    \"mobileNumber\": \"+639123456789\",\n    \"birthDate\": \"2024-11-08\",\n    \"gender\": \"male\",\n    \"country\": \"philippines\",\n    \"province\": \"metro manila\",\n    \"city\": \"taguig city\",\n    \"address\": \"blk 128 lot 57 central\",\n    \"bio\": \"i am interested in developing web application\"\n}\n",
+							"raw": "{\n    \"firstname\": \"jacks\",\n    \"lastname\" : \"pascua\",\n    \"email\": \"12345678@gmail.com\",\n    \"password\": \"Ja*45678\",\n    \"mobileNumber\": \"+639123456789\",\n    \"birthDate\": \"2024-11-08\",\n    \"gender\": \"male\",\n    \"country\": \"philippines\",\n    \"province\": \"metro manila\",\n    \"city\": \"taguig city\",\n    \"address\": \"blk 128 lot 57 central\",\n    \"bio\": \"i am interested in developing web application\"\n}\n",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -46,7 +46,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"email\": \"123456@gmail.com\"\n}",
+							"raw": "{\n    \"email\": \"12345678@gmail.com\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -77,7 +77,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"otpCode\": \"789139\",\n    \"password\": \"Ja*87654\",\n    \"confirmPassword\": \"Ja*87654\"\n}",
+							"raw": "{\n    \"otpCode\": \"283744\",\n    \"password\": \"Ja*45679\",\n    \"confirmPassword\": \"Ja*45679\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -111,7 +111,7 @@
 							"urlencoded": [
 								{
 									"key": "email",
-									"value": "123456@gmail.com",
+									"value": "12345678@gmail.com",
 									"type": "text"
 								},
 								{
@@ -207,7 +207,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"email\": \"123456@gmail.com\"\n}\n",
+							"raw": "{\n    \"email\": \"12345678@gmail.com\"\n}\n",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -281,7 +281,7 @@
 							"urlencoded": [
 								{
 									"key": "firstname",
-									"value": "novvv",
+									"value": "novv",
 									"type": "text"
 								},
 								{
@@ -333,11 +333,6 @@
 									"key": "avatar",
 									"value": "https://res.cloudinary.com/dcvgildpb/image/upload/v1717325765/samples/two-ladies.jpg",
 									"type": "text"
-								},
-								{
-									"key": "password",
-									"value": "Ja*45679",
-									"type": "text"
 								}
 							]
 						},
@@ -353,6 +348,44 @@
 								"v1",
 								"me",
 								"update"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "change password",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{TOKEN}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "password",
+									"value": "Ja*98765",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:4000/api/v1/me/changePassword",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "4000",
+							"path": [
+								"api",
+								"v1",
+								"me",
+								"changePassword"
 							]
 						}
 					},
@@ -386,7 +419,7 @@
 	"variable": [
 		{
 			"key": "TOKEN",
-			"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY2ZDUyYTRiYTU4NDI3ZmM1ZjM2N2U0NiIsImlhdCI6MTcyNTI1MTI4NiwiZXhwIjoxNzI1ODU2MDg2fQ.0umf7Y1_mdsZTS8TXDhUjgIvvXuhrj1lMCrjcU7RKfU",
+			"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY2ZDU1ZmNjMDRiMjgyM2ZmNTU3MWM4NyIsImlhdCI6MTcyNTI2MzU5OCwiZXhwIjoxNzI1ODY4Mzk4fQ.W9FBYgqCiPn7biHQVN6-HNiYF59lbBfvNiMVwCSUU2M",
 			"type": "string"
 		}
 	]
