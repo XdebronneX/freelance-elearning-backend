@@ -4,7 +4,7 @@ const cloudinary = require("cloudinary");
 const sendToken = require("../utils/jwtToken");
 const sendMail = require("../utils/sendMail");
 const bcrypt = require("bcryptjs");
-const crypto = require("crypto");
+
 exports.verifyOTP = async (req, res, next) => {
   try {
     const { otpCode } = req.body;
