@@ -238,48 +238,16 @@ exports.loginUser = async (req, res, next) => {
     }
 
     if (!user.isVerified) {
-      // Generate a new OTP if email is not verified
-      const generateRandomCode = () =>
-        Math.floor(100000 + Math.random() * 900000).toString();
-      const newCode = generateRandomCode();
-
-      const emailContent = `
-        <div style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 30px;">
-          <div style="max-width: 600px; margin: auto; background-color: #ffffff; padding: 30px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); text-align: center;">
-            <h1 style="font-size: 28px; color: #333333; margin-bottom: 20px;">Email Verification Request</h1>
-            <p style="font-size: 16px; color: #333333; margin-bottom: 15px;">Hello <strong>${user.firstname}</strong>,</p>
-            <p style="font-size: 16px; color: #555555; margin-bottom: 20px;">To complete your registration, please verify your email address using the OTP code below:</p>
-            <div style="font-size: 26px; color: #007bff; font-weight: bold; background-color: #f0f8ff; padding: 15px; border-radius: 5px; display: inline-block; margin-bottom: 20px;">${newCode}</div>
-            <p style="font-size: 16px; color: #555555; margin-bottom: 20px;">If you did not request this, you can safely ignore this email.</p>
-            <p style="font-size: 14px; color: #888888; margin-bottom: 20px; line-height: 1.5;">Please note: Your security is important to us. We will never ask you to share your password or other sensitive information via email.</p>
-            <p style="font-size: 16px; color: #555555;">Best regards,<br><strong>Go Virtual</strong></p>
-          </div>
-        </div>
-      `;
-
-      try {
-        await sendMail(user.email, "Go Virtual - OTP", emailContent, true);
-
-        // Update the user's OTP code and creation time
-        user.otpCode.code = newCode;
-        user.otpCode.createdAt = new Date();
-        await user.save();
-
-        return res.status(403).json({
-          success: false,
-          message:
-            "Your account is not verified. An OTP has been sent to your email address for verification.",
-        });
-      } catch (emailError) {
-        console.error("Error sending OTP email:", emailError);
-        return next(
-          new ErrorHandler("There was an error sending the OTP email", 500)
-        );
-      }
+      return res.status(403).json({
+        success: false,
+        message: "Your account is not verified. Please verify your email address.",
+      });
     }
+
     // Checks if the password is correct
     const isPasswordMatched = await bcrypt.compare(password, user.password);
-    user.password = undefined;
+    user.password = undefined; // Remove password from user object
+
     if (!isPasswordMatched) {
       return next(new ErrorHandler("Invalid Email or Password", 401));
     }
@@ -290,7 +258,6 @@ exports.loginUser = async (req, res, next) => {
     return next(new ErrorHandler("Internal server error", 500));
   }
 };
-
 
 exports.getProfile = async (req, res, next) => {
   try {
