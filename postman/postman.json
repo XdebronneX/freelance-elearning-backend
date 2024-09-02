@@ -16,7 +16,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"firstname\": \"evans\",\n    \"lastname\" : \"pascua\",\n    \"email\": \"14243123@gmail.com\",\n    \"password\": \"Ja*45678\",\n    \"mobileNumber\": \"+639987654321\",\n    \"birthDate\": \"2024-11-08\",\n    \"gender\": \"male\",\n    \"country\": \"philippines\",\n    \"province\": \"metro manila\",\n    \"city\": \"taguig city\",\n    \"address\": \"blk 128 lot 57 central\"\n}\n",
+							"raw": "{\n    \"firstname\": \"jacks\",\n    \"lastname\" : \"pascua\",\n    \"email\": \"123456@gmail.com\",\n    \"password\": \"Ja*45678\",\n    \"mobileNumber\": \"+639123456789\",\n    \"birthDate\": \"2024-11-08\",\n    \"gender\": \"male\",\n    \"country\": \"philippines\",\n    \"province\": \"metro manila\",\n    \"city\": \"taguig city\",\n    \"address\": \"blk 128 lot 57 central\",\n    \"bio\": \"i am interested in developing web application\"\n}\n",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -46,7 +46,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"email\": \"6162631@gmail.com\"\n}",
+							"raw": "{\n    \"email\": \"123456@gmail.com\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -111,7 +111,7 @@
 							"urlencoded": [
 								{
 									"key": "email",
-									"value": "123@gmail.com",
+									"value": "123456@gmail.com",
 									"type": "text"
 								},
 								{
@@ -177,7 +177,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"otpCode\": \"266039\"\n}",
+							"raw": "{\n    \"otpCode\": \"833091\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -207,7 +207,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"email\": \"123142@gmail.com\"\n}\n",
+							"raw": "{\n    \"email\": \"123456@gmail.com\"\n}\n",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -260,43 +260,6 @@
 								"api",
 								"v1",
 								"me"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "change password",
-					"request": {
-						"method": "PUT",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "{{TOKEN}}",
-								"type": "text"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n\t\"oldPassword\": \"Ja*45678\",\n\t\"password\": \"87654321\"\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "http://localhost:4000/api/v1/me/changePassword",
-							"protocol": "http",
-							"host": [
-								"localhost"
-							],
-							"port": "4000",
-							"path": [
-								"api",
-								"v1",
-								"me",
-								"changePassword"
 							]
 						}
 					},
@@ -362,8 +325,18 @@
 									"type": "text"
 								},
 								{
+									"key": "bio",
+									"value": "i'm interested in developing website application ",
+									"type": "text"
+								},
+								{
 									"key": "avatar",
 									"value": "https://res.cloudinary.com/dcvgildpb/image/upload/v1717325765/samples/two-ladies.jpg",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "Ja*45679",
 									"type": "text"
 								}
 							]
@@ -413,7 +386,7 @@
 	"variable": [
 		{
 			"key": "TOKEN",
-			"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY2ZDI4ZjY0MzAxMmVmMjRjOGQ0Y2U1YyIsImlhdCI6MTcyNTA3NTM1OSwiZXhwIjoxNzI1NjgwMTU5fQ.HlpViKXzf36B6Foy-bmVpYnzTIXhfK38AZJkGyuQ3EE",
+			"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY2ZDUyYTRiYTU4NDI3ZmM1ZjM2N2U0NiIsImlhdCI6MTcyNTI1MTI4NiwiZXhwIjoxNzI1ODU2MDg2fQ.0umf7Y1_mdsZTS8TXDhUjgIvvXuhrj1lMCrjcU7RKfU",
 			"type": "string"
 		}
 	]
