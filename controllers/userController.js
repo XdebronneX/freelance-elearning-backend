@@ -332,9 +332,7 @@ exports.updateProfile = async (req, res, next) => {
       const user = await UserModel.findById(req.user.id);
 
       if (user.avatar && user.avatar.public_id) {
-        const image_id = user.avatar.public_id;
-
-        await cloudinary.v2.uploader.destroy(image_id);
+        await cloudinary.v2.uploader.destroy(user.avatar.public_id);
       }
 
       const uploadResult = await cloudinary.v2.uploader.upload(
