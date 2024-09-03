@@ -305,7 +305,6 @@ exports.updateProfile = async (req, res, next) => {
     const existingPhoneUser = await UserModel.findOne({
       phone: req.body.mobileNumber,
     });
-
     if (existingPhoneUser) {
       return next(new ErrorHandler("Mobile number already taken!", 400));
     }
@@ -324,65 +323,53 @@ exports.updateProfile = async (req, res, next) => {
       address: req.body.address,
     };
 
-    if (req.body.bio) newUserData.bio = req.body.bio;
+    if (req.body.bio) {
+      newUserData.bio = req.body.bio;
+    }
 
-    if (req.file) {
+    /** Update Avatar if it is provided */
+    if (req.body.avatar) {
       const user = await UserModel.findById(req.user.id);
 
       if (user.avatar && user.avatar.public_id) {
-        await cloudinary.v2.uploader.destroy(user.avatar.public_id);
+        const image_id = user.avatar.public_id;
+
+        await cloudinary.v2.uploader.destroy(image_id);
       }
 
-      try {
-        const uploadResult = await new Promise((resolve, reject) => {
-          const stream = cloudinary.v2.uploader.upload_stream(
-            {
-              folder: "avatars",
-              width: 150,
-              crop: "scale",
-            },
-            (error, result) => {
-              if (error) reject(error);
-              else resolve(result);
-            }
-          );
-          stream.end(req.file.buffer);
-        });
+      const uploadResult = await cloudinary.v2.uploader.upload(
+        req.body.avatar,
+        {
+          folder: "avatars",
+          width: 150,
+          crop: "scale",
+        }
+      );
 
-        // Update the new avatar in user data
-        newUserData.avatar = {
-          public_id: uploadResult.public_id,
-          url: uploadResult.secure_url,
-        };
-      } catch (uploadError) {
-        return next(new ErrorHandler("Failed to upload avatar", 500));
-      }
+      newUserData.avatar = {
+        public_id: uploadResult.public_id,
+        url: uploadResult.secure_url,
+      };
     }
 
-    // Update the user profile in the database
-    const updatedUser = await UserModel.findByIdAndUpdate(
-      req.user.id,
-      newUserData,
-      {
-        new: true,
-        runValidators: true,
-      }
-    ).select("-password");
+    const user = await UserModel.findByIdAndUpdate(req.user.id, newUserData, {
+      new: true,
+      runValidators: true,
+    }).select("-password");
 
-    if (!updatedUser) {
+    if (!user) {
       return res.status(404).json({
         success: false,
         message: "User not found",
       });
     }
 
-    // Send the success response with updated user data
     res.status(200).json({
       success: true,
-      user: updatedUser,
+      user,
     });
   } catch (error) {
-    console.error("Error updating profile:", error);
+    console.error(error);
     return res.status(500).json({
       success: false,
       message: "An error occurred while updating the profile",
