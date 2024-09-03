@@ -313,7 +313,7 @@ exports.updateProfile = async (req, res, next) => {
       firstname: req.body.firstname,
       lastname: req.body.lastname,
       gender: req.body.gender,
-      // birthDate: req.body.birthDate,
+      birthDate: req.body.birthDate,
       phone: req.body.phone,
       region: req.body.region,
       province: req.body.province,
@@ -325,13 +325,6 @@ exports.updateProfile = async (req, res, next) => {
 
     if (req.body.bio) {
       newUserData.bio = req.body.bio;
-    }
-
-    // Update birthDate and add one day
-    if (req.body.birthDate) {
-      const birthDate = new Date(req.body.birthDate);
-      birthDate.setDate(birthDate.getDate() + 1);
-      newUserData.birthDate = birthDate;
     }
 
     /** Update Avatar if it is provided */
