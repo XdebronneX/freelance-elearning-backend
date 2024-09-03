@@ -313,6 +313,7 @@ exports.updateProfile = async (req, res, next) => {
       firstname: req.body.firstname,
       lastname: req.body.lastname,
       gender: req.body.gender,
+      birthDate: req.body.birthDate,
       phone: req.body.phone,
       region: req.body.region,
       province: req.body.province,
@@ -320,11 +321,15 @@ exports.updateProfile = async (req, res, next) => {
       barangay: req.body.barangay,
       postalcode: req.body.postalcode,
       address: req.body.address,
-      bio: req.body.bio,
     };
 
-    /** Update Avatar */
-    if (req.body.avatar !== "") {
+    // Include bio if it is provided in the request
+    if (req.body.bio) {
+      newUserData.bio = req.body.bio;
+    }
+
+    /** Update Avatar if it is provided */
+    if (req.body.avatar) {
       const user = await UserModel.findById(req.user.id);
 
       // Check if the user has an existing avatar
@@ -377,6 +382,7 @@ exports.updateProfile = async (req, res, next) => {
     });
   }
 };
+
 
 exports.forgotPassword = async (req, res, next) => {
   try {
