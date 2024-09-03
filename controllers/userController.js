@@ -305,6 +305,7 @@ exports.updateProfile = async (req, res, next) => {
     const existingPhoneUser = await UserModel.findOne({
       phone: req.body.mobileNumber,
     });
+
     if (existingPhoneUser) {
       return next(new ErrorHandler("Mobile number already taken!", 400));
     }
@@ -323,62 +324,50 @@ exports.updateProfile = async (req, res, next) => {
       address: req.body.address,
     };
 
-    // Include bio if it is provided in the request
-    if (req.body.bio) {
-      newUserData.bio = req.body.bio;
-    }
+    if (req.body.bio) newUserData.bio = req.body.bio;
 
-    /** Update Avatar if a file is provided */
     if (req.file) {
-      console.log('File received:', req.file); // Debugging: check if file is received
-
       const user = await UserModel.findById(req.user.id);
 
-      // Check if the user has an existing avatar
       if (user.avatar && user.avatar.public_id) {
-        const image_id = user.avatar.public_id;
-
-        // Destroy the previous avatar
-        await cloudinary.v2.uploader.destroy(image_id);
+        await cloudinary.v2.uploader.destroy(user.avatar.public_id);
       }
 
-      // Correctly use the file buffer to upload
-      const uploadResult = await new Promise((resolve, reject) => {
-        const stream = cloudinary.v2.uploader.upload_stream(
-          {
-            folder: "avatars",
-            width: 150,
-            crop: "scale",
-          },
-          (error, result) => {
-            if (error) {
-              console.error('Cloudinary upload error:', error); // Debugging: check upload error
-              reject(error);
-            } else {
-              console.log('Cloudinary upload result:', result); // Debugging: check upload result
-              resolve(result);
+      try {
+        const uploadResult = await new Promise((resolve, reject) => {
+          const stream = cloudinary.v2.uploader.upload_stream(
+            {
+              folder: "avatars",
+              width: 150,
+              crop: "scale",
+            },
+            (error, result) => {
+              if (error) reject(error);
+              else resolve(result);
             }
-          }
-        );
+          );
+          stream.end(req.file.buffer);
+        });
 
-        // Use the file buffer from Multer to upload
-        stream.end(req.file.buffer);
-      });
-
-      // Save the new avatar data
-      newUserData.avatar = {
-        public_id: uploadResult.public_id,
-        url: uploadResult.secure_url,
-      };
-    } else {
-      console.error('No file found in the request'); // Debugging: file missing
+        // Update the new avatar in user data
+        newUserData.avatar = {
+          public_id: uploadResult.public_id,
+          url: uploadResult.secure_url,
+        };
+      } catch (uploadError) {
+        return next(new ErrorHandler("Failed to upload avatar", 500));
+      }
     }
 
-    // Update the user profile
-    const updatedUser = await UserModel.findByIdAndUpdate(req.user.id, newUserData, {
-      new: true,
-      runValidators: true,
-    }).select("-password");
+    // Update the user profile in the database
+    const updatedUser = await UserModel.findByIdAndUpdate(
+      req.user.id,
+      newUserData,
+      {
+        new: true,
+        runValidators: true,
+      }
+    ).select("-password");
 
     if (!updatedUser) {
       return res.status(404).json({
@@ -387,12 +376,13 @@ exports.updateProfile = async (req, res, next) => {
       });
     }
 
+    // Send the success response with updated user data
     res.status(200).json({
       success: true,
       user: updatedUser,
     });
   } catch (error) {
-    console.error(error);
+    console.error("Error updating profile:", error);
     return res.status(500).json({
       success: false,
       message: "An error occurred while updating the profile",
