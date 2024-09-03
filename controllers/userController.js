@@ -391,7 +391,6 @@ exports.updateProfile = async (req, res, next) => {
   }
 };
 
-
 exports.forgotPassword = async (req, res, next) => {
   try {
     const { email, otpCode } = req.body;
@@ -509,7 +508,6 @@ exports.resetPassword = async (req, res, next) => {
     return next(new ErrorHandler(error.message, 500));
   }
 };
-
 
 exports.logoutUser = async (req, res, next) => {
   try {
