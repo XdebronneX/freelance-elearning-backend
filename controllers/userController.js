@@ -328,8 +328,10 @@ exports.updateProfile = async (req, res, next) => {
       newUserData.bio = req.body.bio;
     }
 
-    /** Update Avatar if it is provided */
-    if (req.body.avatar) {
+    /** Update Avatar if a file is provided */
+    if (req.file) {
+      console.log('File received:', req.file); // Debugging: check if file is received
+
       const user = await UserModel.findById(req.user.id);
 
       // Check if the user has an existing avatar
@@ -340,29 +342,45 @@ exports.updateProfile = async (req, res, next) => {
         await cloudinary.v2.uploader.destroy(image_id);
       }
 
-      // Upload the new avatar
-      const uploadResult = await cloudinary.v2.uploader.upload(
-        req.body.avatar,
-        {
-          folder: "avatars",
-          width: 150,
-          crop: "scale",
-        }
-      );
+      // Correctly use the file buffer to upload
+      const uploadResult = await new Promise((resolve, reject) => {
+        const stream = cloudinary.v2.uploader.upload_stream(
+          {
+            folder: "avatars",
+            width: 150,
+            crop: "scale",
+          },
+          (error, result) => {
+            if (error) {
+              console.error('Cloudinary upload error:', error); // Debugging: check upload error
+              reject(error);
+            } else {
+              console.log('Cloudinary upload result:', result); // Debugging: check upload result
+              resolve(result);
+            }
+          }
+        );
 
+        // Use the file buffer from Multer to upload
+        stream.end(req.file.buffer);
+      });
+
+      // Save the new avatar data
       newUserData.avatar = {
         public_id: uploadResult.public_id,
         url: uploadResult.secure_url,
       };
+    } else {
+      console.error('No file found in the request'); // Debugging: file missing
     }
 
     // Update the user profile
-    const user = await UserModel.findByIdAndUpdate(req.user.id, newUserData, {
+    const updatedUser = await UserModel.findByIdAndUpdate(req.user.id, newUserData, {
       new: true,
       runValidators: true,
     }).select("-password");
 
-    if (!user) {
+    if (!updatedUser) {
       return res.status(404).json({
         success: false,
         message: "User not found",
@@ -371,7 +389,7 @@ exports.updateProfile = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      user,
+      user: updatedUser,
     });
   } catch (error) {
     console.error(error);
