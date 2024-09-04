@@ -240,7 +240,7 @@ exports.loginUser = async (req, res, next) => {
     if (!user.isVerified) {
       return res.status(403).json({
         success: false,
-        message: "Your account is not verified. Please verify your emai by requesting another OTP.",
+        message: "Your account is not verified. Please verify your email by requesting another OTP.",
       });
     }
 
