@@ -2,7 +2,6 @@ const CourseModel = require("../models/course");
 const ErrorHandler = require("../utils/errorHandler");
 const cloudinary = require("cloudinary").v2;
 
-
 exports.createCourse = async (req, res, next) => {
     try {
 
@@ -120,48 +119,72 @@ exports.getSingleCourse = async (req, res, next) => {
   }
 };
 
-exports.deactivateCourse = async (req, res, next) => {
-    try {
-      const course = await CourseModel.findByIdAndUpdate(
-        req.params.id,
-        { softDelete: true },
-        { new: true }
-      );
-      if (!course) {
-        return next(new ErrorHandler("Course not found", 404));
+
+exports.deactivateCourses = async (req, res, next) => {
+  try {
+      const { courseIds } = req.body;
+
+      // Ensure courseIds is an array and has elements
+      if (!Array.isArray(courseIds) || courseIds.length === 0) {
+          return res.status(400).json({
+              success: false,
+              message: "Please provide an array of course IDs to deactivate.",
+          });
       }
-      res.status(200).json({
-        success: true,
-        message: "Deactivated Success!",
-        course,
-      });
-    } catch (error) {
-      console.log(error);
-      return next(
-        new ErrorHandler("An error occurred while disabling the course", 500)
+
+      // Deactivate courses
+      const result = await CourseModel.updateMany(
+          { _id: { $in: courseIds } },
+          { $set: { softDelete: true } }
       );
-    }
+
+      if (!result.matchedCount) {
+          return res.status(404).json({
+              success: false,
+              message: "No courses found with the provided IDs.",
+          });
+      }
+
+      res.status(200).json({
+          success: true,
+          message: `${result.modifiedCount} courses deactivated successfully!`,
+      });
+  } catch (error) {
+      console.log(error);
+      return next(new ErrorHandler("An error occurred while deactivating the courses", 500));
+  }
 };
 
-exports.reactivateCourse = async (req, res, next) => {
-    try {
-      const course = await CourseModel.findByIdAndUpdate(
-        req.params.id,
-        { softDelete: false },
-        { new: true }
-      );
-      if (!course) {
-        return next(new ErrorHandler("Course not found", 404));
+
+exports.reactivateCourses = async (req, res, next) => {
+  try {
+      const { courseIds } = req.body;
+
+      if (!Array.isArray(courseIds) || courseIds.length === 0) {
+          return res.status(400).json({
+              success: false,
+              message: "Please provide an array of course IDs to reactivate.",
+          });
       }
-      res.status(200).json({
-        success: true,
-        message: "Reactivate Success!",
-        course,
-      });
-    } catch (error) {
-      console.log(error);
-      return next(
-        new ErrorHandler("An error occurred while disabling the course", 500)
+
+      const result = await CourseModel.updateMany(
+          { _id: { $in: courseIds } },
+          { $set: { softDelete: false } }
       );
-    }
+
+      if (!result.matchedCount) {
+          return res.status(404).json({
+              success: false,
+              message: "No courses found with the provided IDs.",
+          });
+      }
+
+      res.status(200).json({
+          success: true,
+          message: `${result.modifiedCount} courses reactivated successfully!`,
+      });
+  } catch (error) {
+      console.log(error);
+      return next(new ErrorHandler("An error occurred while reactivating the courses", 500));
+  }
 };
