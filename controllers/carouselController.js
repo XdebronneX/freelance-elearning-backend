@@ -78,7 +78,7 @@ exports.getCarouselDetails = async (req, res, next) => {
   
         if (!carousel) {
             return next(
-                new ErrorHandler(`Product not found with id: ${req.params.id}`)
+                new ErrorHandler(`Carousel not found with id: ${req.params.id}`)
             );
         }
         res.status(200).json({
@@ -90,7 +90,7 @@ exports.getCarouselDetails = async (req, res, next) => {
         console.log(error);
         return next(new ErrorHandler('Error while fetching carousel details'));
     }
-  };
+};
 
 exports.reOrderingCarousel = async (req, res, next) => {
     try {
