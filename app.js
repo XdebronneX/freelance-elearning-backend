@@ -10,30 +10,22 @@ const carousels = require("./routes/carousel");
 const analytics = require("./routes/analytic");
 
 // List of allowed origins
-const allowedOrigins = [
-  "http://localhost:3000",
-  "https://e-learning-freelance-frontend.vercel.app",
-];
-
+const allowedOrigins = [ "http://localhost:3000",
+"https://e-learning-freelance-frontend.vercel.app"];
 // Middleware
 app.use(express.json());
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      // Allow requests with no origin (like mobile apps or curl requests)
-      if (!origin) return callback(null, true);
-      if (allowedOrigins.indexOf(origin) === -1) {
-        const msg =
-          "The CORS policy for this site does not allow access from the specified origin.";
-        return callback(new Error(msg), false);
+app.use(cors({
+  origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+          callback(null, true);
+      } else {
+          callback(new Error('Not allowed by CORS'));
       }
-      return callback(null, true);
-    },
-    credentials: true,
-  })
-);
+  },
+  credentials: true,
+}));
 
 // Routes
 app.use("/api/v1", users);
