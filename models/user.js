@@ -103,6 +103,10 @@ const userSchema = new mongoose.Schema({
           default: null,
         },
       },
+      role: {
+        type: String,
+        default: "student"
+    },
       isVerified: {
         type: Boolean,
         default: false
