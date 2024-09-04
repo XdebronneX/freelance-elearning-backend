@@ -121,6 +121,7 @@ exports.registerUser = async (req, res, next) => {
       city,
       address,
       bio,
+      role,
     } = req.body;
 
     const existingEmailUser = await UserModel.findOne({ email });
@@ -153,6 +154,7 @@ exports.registerUser = async (req, res, next) => {
       city,
       address,
       bio,
+      role,
       isVerified: false,
       otpCode: { code: null, createdAt: null },
     });
