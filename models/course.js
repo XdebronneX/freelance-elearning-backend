@@ -1,6 +1,26 @@
 const mongoose = require("mongoose");
 
 const courseSchema = new mongoose.Schema({
+    madeBy: {
+        type: mongoose.Schema.ObjectId,
+        ref: "User",
+        required: true,
+    },
+    visibility: {
+        status: {
+            type: String,
+            enum: ["unlisted", "public"],
+            default: "unlisted" 
+        },
+        datePublished: {
+            type: Date,
+        },
+    },
+    conditions: {
+        subscribeMonths: {
+            type: Number,
+        },
+    },
     title: {
         type: String,
         required: [true, "Please enter the title"],
@@ -16,18 +36,6 @@ const courseSchema = new mongoose.Schema({
     },
     workBook: {
         type: String,
-        // required: [true, "Please enter the work book"],
-    },
-    visibility: {
-        status: {
-            type: String,
-            enum: ["unlisted", "public"],
-            default: "unlisted" 
-        },
-        datePublished: {
-            type: Date,
-            // default: Date.now,
-        },
     },
     trailer: {
         public_id: {
@@ -46,11 +54,6 @@ const courseSchema = new mongoose.Schema({
             type: String,
             required: true,
         },
-    },
-    madeBy: {
-        type: mongoose.Schema.ObjectId,
-        ref: "User",
-        required: true,
     },
     createdAt: {
         type: Date,
