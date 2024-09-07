@@ -31,6 +31,7 @@ exports.createCarousel = async (req, res, next) => {
             carousel,
         });
     } catch (error) {
+        console.log(error);
         next(new ErrorHandler(error.message, 500));
     }
 };
