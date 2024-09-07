@@ -317,11 +317,9 @@ exports.updateProfile = async (req, res, next) => {
       gender: req.body.gender,
       birthDate: req.body.birthDate,
       phone: req.body.phone,
-      region: req.body.region,
+      country: req.body.country,
       province: req.body.province,
       city: req.body.city,
-      barangay: req.body.barangay,
-      postalcode: req.body.postalcode,
       address: req.body.address,
     };
 
