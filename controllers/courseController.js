@@ -8,76 +8,6 @@ const moment = require("moment");
 const https = require('https');
 const NotificationModel = require("../models/notification")
 
-// exports.createCourse = async (req, res, next) => {
-//   try {
-
-//       const existingTitle = await CourseModel.findOne({ title: req.body.title });
-//       if (existingTitle) {
-//           return next(new ErrorHandler("Title already exists!", 400));
-//       }
-
-//       if (!req.files || !req.files.banner || !req.files.trailer) {
-//           return next(new ErrorHandler("Missing required parameter - file", 400));
-//       }
-
-//       const { title, description, author, visibility, conditions } = req.body;
-//       const madeBy = req.user.id;
-
-//       const fileName = title.replace(/[^a-zA-Z0-9]/g, '_');
-
-//       const bannerResult = await cloudinary.uploader.upload(req.files.banner[0].path, {
-//           folder: `courses`,
-//           public_id: `banner_${fileName}`,
-//           width: 150,
-//           crop: 'scale'
-//       });
-
-//       const trailerResult = await cloudinary.uploader.upload(req.files.trailer[0].path, {
-//           resource_type: "video",
-//           folder: `courses`,
-//           public_id: `trailer_${fileName}`,
-//           crop: 'fit'
-//       });
-
-//       let workbookResult;
-//       if (req.files.workBook) {
-//           workbookResult = await cloudinary.uploader.upload(req.files.workBook[0].path, {
-//               resource_type: "raw",
-//               folder: `courses`, 
-//               public_id: `workbook_${fileName}` 
-//           });
-//       }
-
-//       const courseData = {
-//           title,
-//           description,
-//           author,
-//           madeBy,
-//           visibility,
-//           conditions,
-//           trailer: {
-//               public_id: trailerResult.public_id,
-//               url: trailerResult.secure_url,
-//           },
-//           banner: {
-//               public_id: bannerResult.public_id,
-//               url: bannerResult.secure_url,
-//           },
-//           workBook: workbookResult ? workbookResult.secure_url : undefined,
-//       };
-
-//       const newCourse = await CourseModel.create(courseData);
-
-//       res.status(201).json({
-//           success: true,
-//           newCourse,
-//       });
-//   } catch (error) {
-//       console.error('Error creating course:', error);
-//       return next(new ErrorHandler(error.message || "Failed to create course", 500));
-//   }
-// };
-
 exports.createCourse = async (req, res, next) => {
   try {
     // Check if the course title already exists
@@ -345,143 +275,6 @@ exports.getAdminSingleCourse = async (req, res, next) => {
   }
 };
 
-// exports.getSingleCoursePublic = async (req, res, next) => {
-//   const { id } = req.params;
-//   const userId = req.user.id;
-
-//   try {
-
-//     const course = await CourseModel.findOne({ _id: id, 'visibility.status': 'public', softDelete: false })
-//       .populate('madeBy', 'firstname lastname role')
-//       .sort({ createdAt: -1 });
-
-//     if (!course) {
-//       return next(new ErrorHandler("Course not found", 404));
-//     }
-
-//     const conditions = course.conditions || {};
-//     const { subscribeMonths } = conditions;
-
-//     if (subscribeMonths) {
-//       const user = await UserModel.findById(userId); 
-
-//       if (!user) {
-//         return next(new ErrorHandler("User not found", 404));
-//       }
-
-//       const userCreatedAt = moment(user.createdAt);
-//       const currentDate = moment();
-//       const monthsSinceCreation = currentDate.diff(userCreatedAt, 'months');
-
-//       if (monthsSinceCreation < subscribeMonths) {
-//         const requiredDate = userCreatedAt.clone().add(subscribeMonths, 'months');
-//         const daysLeft = requiredDate.diff(currentDate, 'days');
-//         const hoursLeft = requiredDate.diff(currentDate, 'hours') % 24;
-//         const minutesLeft = requiredDate.diff(currentDate, 'minutes') % 60;
-//         const secondsLeft = requiredDate.diff(currentDate, 'seconds') % 60;
-
-//         const countdownMessage = `Unlock in ${daysLeft} day(s), ${hoursLeft} hour(s), ${minutesLeft} minute(s), ${secondsLeft} second(s)`;
-
-//         return res.status(403).json({
-//           success: false,
-//           message: countdownMessage,
-//         });
-//       }
-//     }
-
-//     // Return the single course as a response
-//     return res.status(200).json({
-//       success: true,
-//       course
-//     });
-//   } catch (error) {
-//     console.log(error);
-//     return next(new ErrorHandler(error.message || "Error fetching course", 500));
-//   }
-// };
-
-
-//** old code  */
-// exports.getSingleCoursePublic = async (req, res, next) => {
-//   const { id } = req.params;
-//   const userId = req.user.id;
-
-//   try {
-//     // Fetch the course with the required fields and populated references
-//     const course = await CourseModel.findOne({ _id: id, 'visibility.status': 'public', softDelete: false })
-//       .populate('madeBy', 'firstname lastname role')
-//       .sort({ createdAt: -1 });
-
-//     if (!course) {
-//       return next(new ErrorHandler("Course not found", 404));
-//     }
-
-//     const conditions = course.conditions || {};
-//     const { subscribeMonths, requiredFinish } = conditions;
-
-//     if (requiredFinish) {
-//       const requiredCourse = await CourseModel.findById(requiredFinish.courseAssign);
-//       if (!requiredCourse) {
-//         return next(new ErrorHandler("Required finish course not found", 404));
-//       }
-
-//       // Check if the user has completed the required course
-//       const userProgress = await ProgressModel.findOne({ userId, lessonId: { $in: (await LessonModel.find({ assignCourse: requiredFinish.courseAssign })).map(lesson => lesson._id) } });
-
-//       if (!userProgress) {
-//         return next(new ErrorHandler("User progress not found", 404));
-//       }
-
-//       const isRequiredCourseCompleted = userProgress.watchCompleted;
-
-//       if (!isRequiredCourseCompleted) {
-//         return res.status(403).json({
-//           success: false,
-//           message: `Finish "${requiredCourse.title}" to unlock this course`,
-//         });
-//       }
-//     }
-
-//     // Handle subscription months logic
-//     if (subscribeMonths) {
-//       const user = await UserModel.findById(userId); 
-
-//       if (!user) {
-//         return next(new ErrorHandler("User not found", 404));
-//       }
-
-//       const userCreatedAt = moment(user.createdAt);
-//       const currentDate = moment();
-//       const monthsSinceCreation = currentDate.diff(userCreatedAt, 'months');
-
-//       if (monthsSinceCreation < subscribeMonths) {
-//         const requiredDate = userCreatedAt.clone().add(subscribeMonths, 'months');
-//         const daysLeft = requiredDate.diff(currentDate, 'days');
-//         const hoursLeft = requiredDate.diff(currentDate, 'hours') % 24;
-//         const minutesLeft = requiredDate.diff(currentDate, 'minutes') % 60;
-//         const secondsLeft = requiredDate.diff(currentDate, 'seconds') % 60;
-
-//         const countdownMessage = `Unlock in ${daysLeft} day(s), ${hoursLeft} hour(s), ${minutesLeft} minute(s), ${secondsLeft} second(s)`;
-
-//         return res.status(403).json({
-//           success: false,
-//           message: countdownMessage,
-//         });
-//       }
-//     }
-
-//     // Return the single course as a response
-//     return res.status(200).json({
-//       success: true,
-//       course
-//     });
-//   } catch (error) {
-//     console.log(error);
-//     return next(new ErrorHandler(error.message || "Error fetching course", 500));
-//   }
-// };
-
-
 exports.getSingleCoursePublic = async (req, res, next) => {
   const { id } = req.params;
   const userId = req.user.id;
@@ -637,7 +430,6 @@ exports.reactivateCourses = async (req, res, next) => {
   }
 };
 
-//** with  https*/
 exports.downloadworkBook = async (req, res, next) => {
   const { id } = req.params;
   try {
@@ -654,8 +446,7 @@ exports.downloadworkBook = async (req, res, next) => {
     course.totalDownload += 1;
 
     let notification = new NotificationModel({
-      // user: req.user.id,
-      user: null,
+      user: req.user.id || null,
       action: `Downloaded workbook for course ${course.title}`,
     });
 
@@ -682,36 +473,3 @@ exports.downloadworkBook = async (req, res, next) => {
     return next(new ErrorHandler("Internal server error", 500));
   }
 };
-
-/** without https */
-// exports.downloadworkBook = async (req, res, next) => {
-//   const { id } = req.params;
-
-//   try {
-
-//     const course = await CourseModel.findById(id);
-
-//     if (!course || !course.workBook) {
-//       return next(new ErrorHandler("Workbook not found", 404));
-//     }
-
-//     const fileUrl = course.workBook;
-
-//     course.totalDownload += 1;
-
-//     let notification = new NotificationModel({
-//       user: req.user.id,
-//       action: `Downloaded workbook for course ${course.title}`,
-//     });
-
-//     await course.save();
-//     await notification.save();
-
-//     res.setHeader('Content-Disposition', `attachment; filename="workbook_${course.title}.pdf"`);
-//     res.redirect(fileUrl);
-
-//   } catch (error) {
-//     console.log('Internal server error:', error);
-//     return next(new ErrorHandler("Internal server error", 500));
-//   }
-// };
