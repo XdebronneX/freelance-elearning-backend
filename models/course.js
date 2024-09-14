@@ -20,6 +20,12 @@ const courseSchema = new mongoose.Schema({
         subscribeMonths: {
             type: Number,
         },
+        requiredFinish: {
+            courseAssign: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Course",
+            },
+        },
     },
     title: {
         type: String,
@@ -54,6 +60,10 @@ const courseSchema = new mongoose.Schema({
             type: String,
             required: true,
         },
+    },
+    totalDownload:{
+        type: Number,
+        default: 0
     },
     createdAt: {
         type: Date,
