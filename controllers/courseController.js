@@ -280,7 +280,7 @@ exports.getSingleCoursePublic = async (req, res, next) => {
   const userId = req.user.id;
 
   try {
-    // Fetch the course with the required fields and populated references
+
     const course = await CourseModel.findOne({
       _id: id,
       'visibility.status': 'public',
@@ -296,34 +296,36 @@ exports.getSingleCoursePublic = async (req, res, next) => {
     const conditions = course.conditions || {};
     const { subscribeMonths, requiredFinish } = conditions;
 
-    // Check if there's a requiredFinish condition
     if (requiredFinish && requiredFinish.courseAssign) {
       const requiredCourse = await CourseModel.findById(requiredFinish.courseAssign);
       if (!requiredCourse) {
         return next(new ErrorHandler("Required finish course not found", 404));
       }
 
-      // Check if the user has completed the required course
-      const userProgress = await ProgressModel.findOne({
+      const requiredLessons = await LessonModel.find({ assignCourse: requiredFinish.courseAssign });
+      const userProgress = await ProgressModel.find({
         userId,
-        lessonId: { $in: (await LessonModel.find({ assignCourse: requiredFinish.courseAssign })).map(lesson => lesson._id) }
+        lessonId: { $in: requiredLessons.map(lesson => lesson._id) }
       });
 
-      if (!userProgress) {
-        return next(new ErrorHandler("User progress not found", 404));
+      if (!userProgress || userProgress.length === 0) {
+        return res.status(403).json({
+          success: false,
+          message: `You need to start and complete "${requiredCourse.title}" to unlock this course.`,
+        });
       }
 
-      const isRequiredCourseCompleted = userProgress.watchCompleted;
+      const completedLessons = userProgress.filter(progress => progress.watchCompleted);
+      const isRequiredCourseCompleted = completedLessons.length === requiredLessons.length;
 
       if (!isRequiredCourseCompleted) {
         return res.status(403).json({
           success: false,
-          message: `Finish "${requiredCourse.title}" to unlock this course`,
+          message: `Finish all lessons in "${requiredCourse.title}" to unlock this course.`,
         });
       }
     }
 
-    // Check for subscribeMonths condition
     if (subscribeMonths) {
       const user = await UserModel.findById(userId);
       if (!user) {
@@ -360,7 +362,6 @@ exports.getSingleCoursePublic = async (req, res, next) => {
     return next(new ErrorHandler(error.message || "Error fetching course", 500));
   }
 };
-
 
 exports.deactivateCourses = async (req, res, next) => {
   try {
