@@ -234,7 +234,6 @@ exports.getCoursesPublic = async (req, res, next) => {
   }
 };
 
-
 exports.getAdminCourses = async (req, res, next) => {
   try {
     const courses = await CourseModel.find()
@@ -340,10 +339,9 @@ exports.getSingleCoursePublic = async (req, res, next) => {
         const requiredDate = userCreatedAt.clone().add(subscribeMonths, 'months');
         const daysLeft = requiredDate.diff(currentDate, 'days');
         const hoursLeft = requiredDate.diff(currentDate, 'hours') % 24;
-        const minutesLeft = requiredDate.diff(currentDate, 'minutes') % 60;
         const secondsLeft = requiredDate.diff(currentDate, 'seconds') % 60;
 
-        const countdownMessage = `Unlock in ${daysLeft} day(s), ${hoursLeft} hour(s), ${minutesLeft} minute(s), ${secondsLeft} second(s)`;
+        const countdownMessage = `Unlock in ${daysLeft} day(s), ${hoursLeft} hour(s), ${secondsLeft} second(s)`;
 
         return res.status(403).json({
           success: false,
@@ -447,7 +445,7 @@ exports.downloadworkBook = async (req, res, next) => {
     course.totalDownload += 1;
 
     let notification = new NotificationModel({
-      user: req.user.id || null,
+      user: req.user ? req.user.id : null,
       action: `Downloaded workbook for course ${course.title}`,
     });
 

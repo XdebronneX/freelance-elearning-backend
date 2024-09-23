@@ -18,31 +18,9 @@ const progressSchema = new mongoose.Schema({
             required: true,
         },
         currentDuration: {
-            hours: {
-                type: Number,
-                default: 0,
-            },
-            minutes: {
-                type: Number,
-                default: 0,
-            },
             seconds: {
                 type: Number,
                 default: 0,
-            },
-        },
-        totalDuration: {
-            hours: {
-                type: Number,
-                required: true,
-            },
-            minutes: {
-                type: Number,
-                required: true,
-            },
-            seconds: {
-                type: Number,
-                required: true,
             },
         },
         isFinished: {

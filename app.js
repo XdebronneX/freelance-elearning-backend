@@ -10,14 +10,14 @@ const carousels = require("./routes/carousel");
 const analytics = require("./routes/analytic");
 const lessons = require("./routes/lesson");
 const progressRoute = require("./routes/progress")
-
+const customizationRoute = require("./routes/customization")
 // List of allowed origins
 const allowedOrigins = [ "http://localhost:3000",
 "https://e-learning-freelance-frontend.vercel.app"];
 // Middleware
-app.use(express.json());
+app.use(express.json({limit: '50mb'}));
 app.use(cookieParser());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({  limit: '50mb', extended: true }));
 app.use(cors({
   origin: (origin, callback) => {
       if (!origin || allowedOrigins.includes(origin)) {
@@ -36,6 +36,7 @@ app.use("/api/v1", carousels);
 app.use("/api/v1", lessons);
 app.use("/api/v1", progressRoute);
 app.use("/api/v1", analytics);
+app.use("/api/v1", customizationRoute);
 // Error Middleware
 app.use(errorMiddleware);
 

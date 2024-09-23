@@ -49,19 +49,10 @@ const lessonSchema = new mongoose.Schema({
         url: {
           type: String,
         },
-        //test added
         duration: {
-          hours: {
-            type: Number,
-            default: 0,  // Default to 0 hours
-          },
-          minutes: {
-            type: Number,
-            default: 0,  // Default to 0 minutes
-          },
           seconds: {
             type: Number,
-            default: 0,  // Default to 0 seconds
+            default: 0,
           },
         },
       },

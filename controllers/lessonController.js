@@ -1,7 +1,6 @@
 const LessonModel = require("../models/lesson");
 const ErrorHandler = require("../utils/errorHandler");
 const cloudinary = require("cloudinary").v2;
-const fs = require("fs")
 
 const uploadToCloudinary = async (filePath, folder, fileName, resourceType = "image") => {
   try {
@@ -13,12 +12,7 @@ const uploadToCloudinary = async (filePath, folder, fileName, resourceType = "im
 
     let durationFormatted = null;
     if (resourceType === "video" && result.duration) {
-      const duration = result.duration;
-      const hours = Math.floor(duration / 3600);
-      const minutes = Math.floor((duration % 3600) / 60);
-      const seconds = Math.floor(duration % 60);
-
-      durationFormatted = `${hours > 0 ? hours + "h " : ""}${minutes > 0 ? minutes + "m " : ""}${seconds}s`;
+      durationFormatted = Math.floor(result.duration);
     }
 
     return { 
@@ -27,7 +21,7 @@ const uploadToCloudinary = async (filePath, folder, fileName, resourceType = "im
       duration: durationFormatted 
     };
   } catch (error) {
-    throw new ErrorHandler(`Error uploading ${fileName}: ${error.message}`, 500);
+    throw new ErrorHandler(`Error uploading file: ${fileName}. ${error.message}`, 500);
   }
 };
 
@@ -54,6 +48,8 @@ exports.createLesson = async (req, res, next) => {
     const uploadPromises = [];
 
     if (req.files && req.files.video && req.files.video[0]) {
+      console.log("Video file size:", req.files.video[0].size);
+    
       const videoPath = req.files.video[0].path;
       uploadPromises.push(
         cloudinary.uploader.upload(videoPath, {
@@ -138,12 +134,9 @@ exports.createLesson = async (req, res, next) => {
       return next(new ErrorHandler('HLS stream URL not found.', 500));
     }
 
-    let hours = 0, minutes = 0, seconds = 0;
+    let seconds = 0;
     if (uploadedVideo.duration) {
-      const durationSeconds = uploadedVideo.duration; 
-      hours = Math.floor(durationSeconds / 3600);
-      minutes = Math.floor((durationSeconds % 3600) / 60);
-      seconds = Math.floor(durationSeconds % 60);
+      seconds = Math.floor(uploadedVideo.duration);
     }
 
     const newLesson = await LessonModel.create({
@@ -156,8 +149,6 @@ exports.createLesson = async (req, res, next) => {
           public_id: uploadedVideo.public_id,
           url: hlsUrl,
           duration: {
-            hours,
-            minutes,
             seconds,
           },
         },
@@ -170,10 +161,6 @@ exports.createLesson = async (req, res, next) => {
       success: true,
       lesson: newLesson,
     });
-
-    fs.unlinkSync(req.files.video[0].path);
-    fs.unlinkSync(req.files.banner[0].path);
-    fs.unlinkSync(req.files.thumbnail[0].path);
 
   } catch (error) {
     console.error('Error creating lesson:', error);
@@ -242,14 +229,9 @@ exports.updateLesson = async (req, res, next) => {
 
     await Promise.all(uploadPromises);
 
-    let hours = 0, minutes = 0, seconds = 0;
+    let seconds = 0;
     if (uploadedVideo.duration) {
-      const durationParts = uploadedVideo.duration.match(/(\d+h)?\s*(\d+m)?\s*(\d+s)?/);
-      if (durationParts) {
-        hours = durationParts[1] ? parseInt(durationParts[1].replace('h', '')) : 0;
-        minutes = durationParts[2] ? parseInt(durationParts[2].replace('m', '')) : 0;
-        seconds = durationParts[3] ? parseInt(durationParts[3].replace('s', '')) : 0;
-      }
+      seconds = Math.floor(uploadedVideo.duration);
     }
 
     const newVideoLesson = {
@@ -259,8 +241,6 @@ exports.updateLesson = async (req, res, next) => {
             public_id: uploadedVideo.public_id,
             url: uploadedVideo.url,
             duration: {
-              hours,
-              minutes,
               seconds,
             },
           }
@@ -434,7 +414,7 @@ exports.deactivateLessons = async (req, res, next) => {
         return next(new ErrorHandler("An error occurred while deactivating the lessons", 500));
     }
 };
-  
+
 exports.reactivateCourses = async (req, res, next) => {
     try {
         const { lessonIds } = req.body;

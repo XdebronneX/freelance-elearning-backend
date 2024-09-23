@@ -1,348 +1,103 @@
-// const ProgressModel = require("../models/progress");
-// const LessonModel = require("../models/lesson");
-// const ErrorHandler = require("../utils/errorHandler");
-
-// exports.startProgress = async (req, res, next) => {
-//     try {
-//         const { lessonId, videoId, currentDuration } = req.body;
-//         const userId = req.user.id; // Assumed from authentication middleware
-
-//         // Fetch the lesson to get the videoLesson and its duration
-//         const lesson = await LessonModel.findById(lessonId);
-//         if (!lesson) {
-//             return next(new ErrorHandler("Lesson not found!", 404));
-//         }
-
-//         // Find the video within the videoLesson array that matches the videoId
-//         const videoLessonEntry = lesson.videoLesson.find(v => v.video.public_id === videoId);
-
-//         if (!videoLessonEntry) {
-//             return next(new ErrorHandler("Video not found in the lesson!", 404));
-//         }
-
-//         // Extract the totalDuration from the videoLesson
-//         const totalDuration = videoLessonEntry.video.duration || { hours: 0, minutes: 0, seconds: 0 };
-
-//         // Convert currentDuration to seconds (if needed)
-//         // const currentDurationInSeconds = currentDuration.hours * 3600 + currentDuration.minutes * 60 + currentDuration.seconds;
-
-//         // Check if progress already exists for this user, lesson, and video
-//         let progress = await ProgressModel.findOne({ userId, lessonId, videoId });
-
-//         if (!progress) {
-//             // Create new progress if none exists
-//             progress = new ProgressModel({
-//                 userId,
-//                 lessonId,
-//                 videoId,
-//                 currentDuration: {
-//                     hours: currentDuration.hours || 0,
-//                     minutes: currentDuration.minutes || 0,
-//                     seconds: currentDuration.seconds || 0,
-//                 },
-//                 totalDuration: {
-//                     hours: totalDuration.hours || 0,
-//                     minutes: totalDuration.minutes || 0,
-//                     seconds: totalDuration.seconds || 0,
-//                 },
-//                 lastWatchedAt: new Date(),
-//             });
-//         } else {
-//             // Update existing progress
-//             progress.currentDuration = {
-//                 hours: currentDuration.hours || progress.currentDuration.hours,
-//                 minutes: currentDuration.minutes || progress.currentDuration.minutes,
-//                 seconds: currentDuration.seconds || progress.currentDuration.seconds,
-//             };
-//             progress.lastWatchedAt = new Date();
-//         }
-
-//         // Save the progress
-//         await progress.save();
-
-//         res.status(200).json({
-//             success: true,
-//             progress,
-//         });
-//     } catch (error) {
-//         next(new ErrorHandler(error.message || "Failed to update progress", 500));
-//     }
-// };
-
-//** working with the video id  */
-// const ProgressModel = require("../models/progress");
-// const LessonModel = require("../models/lesson");
-// const ErrorHandler = require("../utils/errorHandler");
-
-// exports.startProgress = async (req, res, next) => {
-//     try {
-//         const { lessonId, videoLessonId, currentDuration } = req.body;
-//         const userId = req.user.id; // Assumed from authentication middleware
-
-//         // Fetch the lesson to get the videoLesson and its duration
-//         const lesson = await LessonModel.findById(lessonId);
-//         if (!lesson) {
-//             return next(new ErrorHandler("Lesson not found!", 404));
-//         }
-
-//         // Find the video within the videoLesson array that matches the videoLessonId
-//         const videoLessonEntry = lesson.videoLesson.find(v => v._id.toString() === videoLessonId);
-
-//         if (!videoLessonEntry) {
-//             return next(new ErrorHandler("Video not found in the lesson!", 404));
-//         }
-
-//         // Extract the totalDuration from the videoLesson
-//         const totalDuration = videoLessonEntry.video.duration || { hours: 0, minutes: 0, seconds: 0 };
-
-//         // Check if progress already exists for this user, lesson, and videoLessonId
-//         let progress = await ProgressModel.findOne({ userId, lessonId, videoLessonId });
-
-//         if (!progress) {
-//             // Create new progress if none exists
-//             progress = new ProgressModel({
-//                 userId,
-//                 lessonId,
-//                 videoLessonId,
-//                 currentDuration: {
-//                     hours: currentDuration.hours || 0,
-//                     minutes: currentDuration.minutes || 0,
-//                     seconds: currentDuration.seconds || 0,
-//                 },
-//                 totalDuration: {
-//                     hours: totalDuration.hours || 0,
-//                     minutes: totalDuration.minutes || 0,
-//                     seconds: totalDuration.seconds || 0,
-//                 },
-//                 lastWatchedAt: new Date(),
-//             });
-//         } else {
-//             // Update existing progress
-//             progress.currentDuration = {
-//                 hours: currentDuration.hours || progress.currentDuration.hours,
-//                 minutes: currentDuration.minutes || progress.currentDuration.minutes,
-//                 seconds: currentDuration.seconds || progress.currentDuration.seconds,
-//             };
-//             progress.lastWatchedAt = new Date();
-//         }
-
-//         // Save the progress
-//         await progress.save();
-
-//         res.status(200).json({
-//             success: true,
-//             progress,
-//         });
-//     } catch (error) {
-//         next(new ErrorHandler(error.message || "Failed to update progress", 500));
-//     }
-// };
-
-//** Latest working without isFisnished */
-// const ProgressModel = require("../models/progress");
-// const LessonModel = require("../models/lesson");
-// const ErrorHandler = require("../utils/errorHandler");
-
-// exports.startProgress = async (req, res, next) => {
-//     try {
-//         const { lessonId, videoLessonId, currentDuration } = req.body;
-//         const userId = req.user.id; // Assumed from authentication middleware
-
-//         // Fetch the lesson to get the videoLesson and its duration
-//         const lesson = await LessonModel.findById(lessonId);
-//         if (!lesson) {
-//             return next(new ErrorHandler("Lesson not found!", 404));
-//         }
-
-//         // Find the video within the videoLesson array that matches the videoLessonId
-//         const videoLessonEntry = lesson.videoLesson.find(v => v._id.toString() === videoLessonId);
-
-//         if (!videoLessonEntry) {
-//             return next(new ErrorHandler("Video not found in the lesson!", 404));
-//         }
-
-//         // Extract the totalDuration from the videoLesson
-//         const totalDuration = videoLessonEntry.video.duration || { hours: 0, minutes: 0, seconds: 0 };
-
-//         // Find or create the user's progress record for this lesson
-//         let progress = await ProgressModel.findOne({ userId, lessonId });
-
-//         if (!progress) {
-//             // Create new progress record if none exists
-//             progress = new ProgressModel({
-//                 userId,
-//                 lessonId,
-//                 videoProgress: [{
-//                     videoLessonId,
-//                     currentDuration: {
-//                         hours: currentDuration.hours || 0,
-//                         minutes: currentDuration.minutes || 0,
-//                         seconds: currentDuration.seconds || 0,
-//                     },
-//                     totalDuration: {
-//                         hours: totalDuration.hours || 0,
-//                         minutes: totalDuration.minutes || 0,
-//                         seconds: totalDuration.seconds || 0,
-//                     },
-//                     lastWatchedAt: new Date(),
-//                 }],
-//             });
-//         } else {
-//             // Update existing progress
-//             const videoProgressEntry = progress.videoProgress.find(vp => vp.videoLessonId.toString() === videoLessonId);
-
-//             if (videoProgressEntry) {
-//                 // Update existing video progress
-//                 videoProgressEntry.currentDuration = {
-//                     hours: currentDuration.hours || videoProgressEntry.currentDuration.hours,
-//                     minutes: currentDuration.minutes || videoProgressEntry.currentDuration.minutes,
-//                     seconds: currentDuration.seconds || videoProgressEntry.currentDuration.seconds,
-//                 };
-//                 videoProgressEntry.lastWatchedAt = new Date();
-//             } else {
-//                 // Add new video progress entry
-//                 progress.videoProgress.push({
-//                     videoLessonId,
-//                     currentDuration: {
-//                         hours: currentDuration.hours || 0,
-//                         minutes: currentDuration.minutes || 0,
-//                         seconds: currentDuration.seconds || 0,
-//                     },
-//                     totalDuration: {
-//                         hours: totalDuration.hours || 0,
-//                         minutes: totalDuration.minutes || 0,
-//                         seconds: totalDuration.seconds || 0,
-//                     },
-//                     lastWatchedAt: new Date(),
-//                 });
-//             }
-//         }
-
-//         // Save the progress
-//         await progress.save();
-
-//         res.status(200).json({
-//             success: true,
-//             progress,
-//         });
-//     } catch (error) {
-//         next(new ErrorHandler(error.message || "Failed to update progress", 500));
-//     }
-// };
-
-//** Latest working with isFisnished */
-// const ProgressModel = require("../models/progress");
-// const LessonModel = require("../models/lesson");
-// const ErrorHandler = require("../utils/errorHandler");
-
-// exports.startProgress = async (req, res, next) => {
-//     try {
-//         const { lessonId, videoLessonId, currentDuration } = req.body;
-//         const userId = req.user.id; // Assumed from authentication middleware
-
-//         // Fetch the lesson to get the videoLesson and its duration
-//         const lesson = await LessonModel.findById(lessonId);
-//         if (!lesson) {
-//             return next(new ErrorHandler("Lesson not found!", 404));
-//         }
-
-//         // Find the video within the videoLesson array that matches the videoLessonId
-//         const videoLessonEntry = lesson.videoLesson.find(v => v._id.toString() === videoLessonId);
-
-//         if (!videoLessonEntry) {
-//             return next(new ErrorHandler("Video not found in the lesson!", 404));
-//         }
-
-//         // Extract the totalDuration from the videoLesson
-//         const totalDuration = videoLessonEntry.video.duration || { hours: 0, minutes: 0, seconds: 0 };
-
-//         // Helper function to check if video is finished
-//         const isFinished = (currentDuration, totalDuration) => {
-//             return (currentDuration.hours > totalDuration.hours) ||
-//                 (currentDuration.hours === totalDuration.hours && currentDuration.minutes > totalDuration.minutes) ||
-//                 (currentDuration.hours === totalDuration.hours && currentDuration.minutes === totalDuration.minutes && currentDuration.seconds >= totalDuration.seconds);
-//         };
-
-//         // Find or create the user's progress record for this lesson
-//         let progress = await ProgressModel.findOne({ userId, lessonId });
-
-//         if (!progress) {
-//             // Create new progress record if none exists
-//             progress = new ProgressModel({
-//                 userId,
-//                 lessonId,
-//                 videoProgress: [{
-//                     videoLessonId,
-//                     currentDuration: {
-//                         hours: currentDuration.hours || 0,
-//                         minutes: currentDuration.minutes || 0,
-//                         seconds: currentDuration.seconds || 0,
-//                     },
-//                     totalDuration: {
-//                         hours: totalDuration.hours || 0,
-//                         minutes: totalDuration.minutes || 0,
-//                         seconds: totalDuration.seconds || 0,
-//                     },
-//                     isFinished: isFinished(currentDuration, totalDuration),
-//                     lastWatchedAt: new Date(),
-//                 }],
-//             });
-//         } else {
-//             // Update existing progress
-//             const videoProgressEntry = progress.videoProgress.find(vp => vp.videoLessonId.toString() === videoLessonId);
-
-//             if (videoProgressEntry) {
-//                 // Update existing video progress
-//                 videoProgressEntry.currentDuration = {
-//                     hours: currentDuration.hours || videoProgressEntry.currentDuration.hours,
-//                     minutes: currentDuration.minutes || videoProgressEntry.currentDuration.minutes,
-//                     seconds: currentDuration.seconds || videoProgressEntry.currentDuration.seconds,
-//                 };
-//                 videoProgressEntry.isFinished = isFinished(videoProgressEntry.currentDuration, videoProgressEntry.totalDuration);
-//                 videoProgressEntry.lastWatchedAt = new Date();
-//             } else {
-//                 // Add new video progress entry
-//                 progress.videoProgress.push({
-//                     videoLessonId,
-//                     currentDuration: {
-//                         hours: currentDuration.hours || 0,
-//                         minutes: currentDuration.minutes || 0,
-//                         seconds: currentDuration.seconds || 0,
-//                     },
-//                     totalDuration: {
-//                         hours: totalDuration.hours || 0,
-//                         minutes: totalDuration.minutes || 0,
-//                         seconds: totalDuration.seconds || 0,
-//                     },
-//                     isFinished: isFinished(currentDuration, totalDuration),
-//                     lastWatchedAt: new Date(),
-//                 });
-//             }
-//         }
-
-//         // Save the progress
-//         await progress.save();
-
-//         res.status(200).json({
-//             success: true,
-//             progress,
-//         });
-//     } catch (error) {
-//         next(new ErrorHandler(error.message || "Failed to update progress", 500));
-//     }
-// };
-
-
 const ProgressModel = require("../models/progress");
 const LessonModel = require("../models/lesson");
 const ErrorHandler = require("../utils/errorHandler");
+const NotificationModel = require("../models/notification")
+
+// exports.startProgress = async (req, res, next) => {
+//     try {
+//         const { lessonId, videoLessonId, currentDuration } = req.body;
+//         const userId = req.user.id;
+
+//         const lesson = await LessonModel.findById(lessonId);
+//         if (!lesson) {
+//             return next(new ErrorHandler("Lesson not found!", 404));
+//         }
+
+//         const videoLessonEntry = lesson.videoLesson.find(v => v._id.toString() === videoLessonId);
+//         if (!videoLessonEntry) {
+//             return next(new ErrorHandler("Video not found in the lesson!", 404));
+//         }
+
+//         const totalDuration = videoLessonEntry.video.duration.seconds;
+
+//         const isFinished = (currentSeconds, totalSeconds) => {
+//             return currentSeconds >= totalSeconds;
+//         };
+
+//         let progress = await ProgressModel.findOne({ userId, lessonId });
+
+//         const currentSeconds = currentDuration.seconds || 0;
+
+//         const currentVideoIndex = lesson.videoLesson.findIndex(v => v._id.toString() === videoLessonId);
+
+//         if (currentVideoIndex > 0) {
+//             const firstVideoId = lesson.videoLesson[0]._id.toString();
+//             const firstVideoProgress = progress ? progress.videoProgress.find(vp => vp.videoLessonId.toString() === firstVideoId) : null;
+
+//             if (!firstVideoProgress || !firstVideoProgress.isFinished) {
+//                 return next(new ErrorHandler("Finish previous video to unlock", 400));
+//             }
+//         }
+
+//         if (!progress) {
+//             progress = new ProgressModel({
+//                 userId,
+//                 lessonId,
+//                 videoProgress: [{
+//                     videoLessonId,
+//                     currentDuration: {
+//                         seconds: currentSeconds,
+//                     },
+//                     isFinished: isFinished(currentSeconds, totalDuration),
+//                     lastWatchedAt: new Date(),
+//                 }],
+//             });
+//         } else {
+//             const videoProgressEntry = progress.videoProgress.find(vp => vp.videoLessonId.toString() === videoLessonId);
+
+//             if (videoProgressEntry) {
+//                 videoProgressEntry.currentDuration.seconds = currentSeconds;
+
+//                 if (!videoProgressEntry.isFinished) {
+//                     videoProgressEntry.isFinished = isFinished(videoProgressEntry.currentDuration.seconds, totalDuration);
+//                 }
+                
+//                 videoProgressEntry.lastWatchedAt = new Date();
+//             } else {
+//                 progress.videoProgress.push({
+//                     videoLessonId,
+//                     currentDuration: {
+//                         seconds: currentSeconds,
+//                     },
+//                     isFinished: isFinished(currentSeconds, totalDuration),
+//                     lastWatchedAt: new Date(),
+//                 });
+//             }
+//         }
+
+//         const totalVideosCount = lesson.videoLesson.length;
+//         const finishedVideosCount = progress.videoProgress.filter(vp => vp.isFinished).length;
+
+//         progress.watchCompleted = finishedVideosCount === totalVideosCount;
+
+//         await progress.save();
+
+//         res.status(200).json({
+//             success: true,
+//             progress,
+//         });
+//     } catch (error) {
+//         next(new ErrorHandler(error.message || "Failed to update progress", 500));
+//     }
+// };
 
 exports.startProgress = async (req, res, next) => {
     try {
         const { lessonId, videoLessonId, currentDuration } = req.body;
         const userId = req.user.id;
 
-        const lesson = await LessonModel.findById(lessonId);
+        // Populate the assignCourse field to access the course details
+        const lesson = await LessonModel.findById(lessonId).populate('assignCourse');
         if (!lesson) {
             return next(new ErrorHandler("Lesson not found!", 404));
         }
@@ -352,16 +107,29 @@ exports.startProgress = async (req, res, next) => {
             return next(new ErrorHandler("Video not found in the lesson!", 404));
         }
 
-        const totalDuration = videoLessonEntry.video.duration || { hours: 0, minutes: 0, seconds: 0 };
+        const totalDuration = videoLessonEntry.video.duration.seconds;
 
-        const isFinished = (currentDuration, totalDuration) => {
-            return (currentDuration.hours > totalDuration.hours) ||
-                (currentDuration.hours === totalDuration.hours && currentDuration.minutes > totalDuration.minutes) ||
-                (currentDuration.hours === totalDuration.hours && currentDuration.minutes === totalDuration.minutes && currentDuration.seconds >= totalDuration.seconds);
+        const isFinished = (currentSeconds, totalSeconds) => {
+            return currentSeconds >= totalSeconds;
         };
 
         let progress = await ProgressModel.findOne({ userId, lessonId });
 
+        const currentSeconds = currentDuration.seconds || 0;
+
+        const currentVideoIndex = lesson.videoLesson.findIndex(v => v._id.toString() === videoLessonId);
+
+        // Ensure previous video is finished before unlocking the next video
+        if (currentVideoIndex > 0) {
+            const firstVideoId = lesson.videoLesson[0]._id.toString();
+            const firstVideoProgress = progress ? progress.videoProgress.find(vp => vp.videoLessonId.toString() === firstVideoId) : null;
+
+            if (!firstVideoProgress || !firstVideoProgress.isFinished) {
+                return next(new ErrorHandler("Finish previous video to unlock", 400));
+            }
+        }
+
+        // If no progress record exists, create a new one
         if (!progress) {
             progress = new ProgressModel({
                 userId,
@@ -369,67 +137,61 @@ exports.startProgress = async (req, res, next) => {
                 videoProgress: [{
                     videoLessonId,
                     currentDuration: {
-                        hours: currentDuration.hours || 0,
-                        minutes: currentDuration.minutes || 0,
-                        seconds: currentDuration.seconds || 0,
+                        seconds: currentSeconds,
                     },
-                    totalDuration: {
-                        hours: totalDuration.hours || 0,
-                        minutes: totalDuration.minutes || 0,
-                        seconds: totalDuration.seconds || 0,
-                    },
-                    isFinished: isFinished(currentDuration, totalDuration),
+                    isFinished: isFinished(currentSeconds, totalDuration),
                     lastWatchedAt: new Date(),
                 }],
             });
         } else {
-
-            const currentVideoIndex = lesson.videoLesson.findIndex(v => v._id.toString() === videoLessonId);
-
-            if (currentVideoIndex > 0) {
-                const previousVideoId = lesson.videoLesson[currentVideoIndex - 1]._id.toString();
-                const previousVideoProgress = progress.videoProgress.find(vp => vp.videoLessonId.toString() === previousVideoId);
-
-                if (!previousVideoProgress || !previousVideoProgress.isFinished) {
-                    return next(new ErrorHandler(`Finish previous video to to unlock`, 400));
-                }
-            }
-
+            // Update existing video progress or add a new entry
             const videoProgressEntry = progress.videoProgress.find(vp => vp.videoLessonId.toString() === videoLessonId);
 
             if (videoProgressEntry) {
+                videoProgressEntry.currentDuration.seconds = currentSeconds;
 
-                videoProgressEntry.currentDuration = {
-                    hours: currentDuration.hours || videoProgressEntry.currentDuration.hours,
-                    minutes: currentDuration.minutes || videoProgressEntry.currentDuration.minutes,
-                    seconds: currentDuration.seconds || videoProgressEntry.currentDuration.seconds,
-                };
-                videoProgressEntry.isFinished = isFinished(videoProgressEntry.currentDuration, videoProgressEntry.totalDuration);
+                if (!videoProgressEntry.isFinished) {
+                    videoProgressEntry.isFinished = isFinished(videoProgressEntry.currentDuration.seconds, totalDuration);
+                }
+                
                 videoProgressEntry.lastWatchedAt = new Date();
             } else {
-
                 progress.videoProgress.push({
                     videoLessonId,
                     currentDuration: {
-                        hours: currentDuration.hours || 0,
-                        minutes: currentDuration.minutes || 0,
-                        seconds: currentDuration.seconds || 0,
+                        seconds: currentSeconds,
                     },
-                    totalDuration: {
-                        hours: totalDuration.hours || 0,
-                        minutes: totalDuration.minutes || 0,
-                        seconds: totalDuration.seconds || 0,
-                    },
-                    isFinished: isFinished(currentDuration, totalDuration),
+                    isFinished: isFinished(currentSeconds, totalDuration),
                     lastWatchedAt: new Date(),
                 });
             }
         }
 
-        const allVideosFinished = progress.videoProgress.every(vp => vp.isFinished);
-        progress.watchCompleted = allVideosFinished;
+        const totalVideosCount = lesson.videoLesson.length;
+        const finishedVideosCount = progress.videoProgress.filter(vp => vp.isFinished).length;
+
+        progress.watchCompleted = finishedVideosCount === totalVideosCount;
 
         await progress.save();
+
+        // Check if the current video is finished and insert a notification if true
+        const currentVideoProgress = progress.videoProgress.find(vp => vp.videoLessonId.toString() === videoLessonId);
+        if (currentVideoProgress.isFinished) {
+            const videoNotification = new NotificationModel({
+                user: req.user ? req.user.id : null,
+                action: `Finish video ${videoLessonEntry.title}`,
+            });
+            await videoNotification.save();
+        }
+
+        // If all videos are finished, insert a course completion notification using assignCourse title
+        if (progress.watchCompleted && lesson.assignCourse) {
+            const courseNotification = new NotificationModel({
+                user: req.user ? req.user.id : null,
+                action: `Finish course ${lesson.assignCourse.title}`,
+            });
+            await courseNotification.save();
+        }
 
         res.status(200).json({
             success: true,
@@ -439,7 +201,6 @@ exports.startProgress = async (req, res, next) => {
         next(new ErrorHandler(error.message || "Failed to update progress", 500));
     }
 };
-
 
 exports.getLatestProgress = async (req, res, next) => {
     try {
