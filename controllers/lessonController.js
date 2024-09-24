@@ -54,6 +54,7 @@ exports.createLesson = async (req, res, next) => {
       uploadPromises.push(
         cloudinary.uploader.upload(videoPath, {
           resource_type: 'video',
+          public_id: `${titleSlug}_video`,
           folder: 'lessons',
           streaming_profile: 'adaptive',
           eager: [
@@ -72,6 +73,7 @@ exports.createLesson = async (req, res, next) => {
       const bannerPath = req.files.banner[0].path;
       uploadPromises.push(
         cloudinary.uploader.upload(bannerPath, {
+          public_id: `${titleSlug}_banner`,
           folder: 'lessons',
           width: 150,
           crop: 'scale',
@@ -87,6 +89,7 @@ exports.createLesson = async (req, res, next) => {
       const thumbnailPath = req.files.thumbnail[0].path;
       uploadPromises.push(
         cloudinary.uploader.upload(thumbnailPath, {
+          public_id: `${titleSlug}_thumbnail`,
           folder: 'lessons',
           width: 150,
           crop: 'scale',

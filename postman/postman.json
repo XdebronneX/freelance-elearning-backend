@@ -1,7 +1,7 @@
 {
 	"info": {
 		"_postman_id": "493ce265-8e61-4ede-85c5-48dc971cbb80",
-		"name": "GoVirtual",
+		"name": "DEVELOPMENT",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "30547403"
 	},
@@ -16,7 +16,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"firstname\": \"jacks\",\n    \"lastname\" : \"pascua\",\n    \"email\": \"12345678@gmail.com\",\n    \"password\": \"Ja*45678\",\n    \"mobileNumber\": \"+639987654321\",\n    \"birthDate\": \"2024-11-08\",\n    \"gender\": \"male\",\n    \"country\": \"philippines\",\n    \"province\": \"metro manila\",\n    \"city\": \"taguig city\",\n    \"address\": \"blk 128 lot 57 central\",\n    \"bio\": \"i am interested in developing web application\"\n}\n",
+							"raw": "{\n    \"firstname\": \"jacks\",\n    \"lastname\" : \"evans\",\n    \"email\": \"sample@gmail.com\",\n    \"password\": \"Ja*45678\",\n    \"mobileNumber\": \"+639987654321\",\n    \"birthDate\": \"2024-11-09\",\n    \"gender\": \"male\",\n    \"country\": \"philippines\",\n    \"province\": \"metro manila\",\n    \"city\": \"taguig city\",\n    \"address\": \"blk 128 lot 57 central\",\n    \"bio\": \"i am interested in developing web application\",\n    \"role\": \"admin\"\n}\n",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -46,7 +46,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"email\": \"12345678@gmail.com\"\n}",
+							"raw": "{\n    \"email\": \"sample@gmail.com\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -111,12 +111,12 @@
 							"urlencoded": [
 								{
 									"key": "email",
-									"value": "12345678@gmail.com",
+									"value": "sample@gmail.com",
 									"type": "text"
 								},
 								{
 									"key": "password",
-									"value": "Ja*45678",
+									"value": "Ja*456788",
 									"type": "text"
 								}
 							]
@@ -177,7 +177,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"otpCode\": \"440000\"\n}",
+							"raw": "{\n    \"otpCode\": \"631382\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -207,7 +207,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"email\": \"12345678@gmail.com\"\n}\n",
+							"raw": "{\n    \"email\": \"sample@gmail.com\"\n}\n",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -277,8 +277,64 @@
 							}
 						],
 						"body": {
-							"mode": "formdata",
-							"formdata": []
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "firstname",
+									"value": "novv",
+									"type": "text"
+								},
+								{
+									"key": "lastname",
+									"value": "pascua",
+									"type": "text"
+								},
+								{
+									"key": "mobileNumber",
+									"value": "+639123456788",
+									"type": "text"
+								},
+								{
+									"key": "birthDate",
+									"value": "2024-11-09",
+									"type": "text"
+								},
+								{
+									"key": "gender",
+									"value": "male",
+									"type": "text"
+								},
+								{
+									"key": "country",
+									"value": "philippines",
+									"type": "text"
+								},
+								{
+									"key": "province",
+									"value": "metro manila",
+									"type": "text"
+								},
+								{
+									"key": "city",
+									"value": "taguig city",
+									"type": "text"
+								},
+								{
+									"key": "address",
+									"value": "blk 162 lot 57",
+									"type": "text"
+								},
+								{
+									"key": "bio",
+									"value": "i'm interested in developing website application",
+									"type": "text"
+								},
+								{
+									"key": "avatar",
+									"value": "https://res.cloudinary.com/dubqwtqc4/image/upload/v1725458752/sarsi_lbqdgf.jpg",
+									"type": "text"
+								}
+							]
 						},
 						"url": {
 							"raw": "http://localhost:4000/api/v1/me/update",
@@ -341,75 +397,300 @@
 			"name": "course",
 			"item": [
 				{
-					"name": "new course",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "{{TOKEN}}",
-								"type": "text"
-							}
-						],
-						"body": {
-							"mode": "formdata",
-							"formdata": [
-								{
-									"key": "title",
-									"value": "5th",
-									"type": "text"
+					"name": "admin control",
+					"item": [
+						{
+							"name": "admin new course",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "{{TOKEN}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "title",
+											"value": "september06",
+											"type": "text"
+										},
+										{
+											"key": "description",
+											"value": "test unlisted",
+											"type": "text"
+										},
+										{
+											"key": "visibility[status]",
+											"value": "unlisted",
+											"type": "text"
+										},
+										{
+											"key": "visibility[datePublished]",
+											"value": "2024-09-03T17:25:28.772Z",
+											"type": "text"
+										},
+										{
+											"key": "author",
+											"value": "james deb",
+											"type": "text"
+										},
+										{
+											"key": "banner",
+											"type": "file",
+											"src": "/Users/jacksmartel/Downloads/two-ladies.jpg"
+										},
+										{
+											"key": "trailer",
+											"type": "file",
+											"src": "/Users/jacksmartel/Downloads/two-ladies-Thumbnail.jpg"
+										},
+										{
+											"key": "workBook",
+											"type": "file",
+											"src": "/Users/jacksmartel/Downloads/sept06workbook.pdf"
+										},
+										{
+											"key": "conditions[subscribeMonths]",
+											"value": "1",
+											"type": "text"
+										}
+									]
 								},
-								{
-									"key": "description",
-									"value": "mas okay na ba to",
-									"type": "text"
-								},
-								{
-									"key": "visibility[status]",
-									"value": "unlisted",
-									"type": "text"
-								},
-								{
-									"key": "visibility[datePublished]",
-									"value": "2024-09-03T17:25:28.772Z",
-									"type": "text"
-								},
-								{
-									"key": "author",
-									"value": "james deb",
-									"type": "text"
-								},
-								{
-									"key": "banner",
-									"type": "file",
-									"src": "/Users/jacksmartel/Downloads/piattos_ynoz9d.jpg"
-								},
-								{
-									"key": "trailer",
-									"type": "file",
-									"src": "/Users/jacksmartel/Downloads/6981614-hd_1920_1080_30fps.mp4"
+								"url": {
+									"raw": "http://localhost:4000/api/v1/new/course",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "4000",
+									"path": [
+										"api",
+										"v1",
+										"new",
+										"course"
+									]
 								}
-							]
+							},
+							"response": []
 						},
-						"url": {
-							"raw": "http://localhost:4000/api/v1/new/course",
-							"protocol": "http",
-							"host": [
-								"localhost"
-							],
-							"port": "4000",
-							"path": [
-								"api",
-								"v1",
-								"new",
-								"course"
-							]
+						{
+							"name": "admin courses",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "{{TOKEN}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "http://localhost:4000/api/v1/admin/courses",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "4000",
+									"path": [
+										"api",
+										"v1",
+										"admin",
+										"courses"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "admin single course",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "{{TOKEN}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "http://localhost:4000/api/v1/admin/singleCourse/66d9404eea56d2421985988b",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "4000",
+									"path": [
+										"api",
+										"v1",
+										"admin",
+										"singleCourse",
+										"66d9404eea56d2421985988b"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "admin deactivated multiple",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "{{TOKEN}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"courseIds\": [\n        \"66d7494ee5a2056fdcbed055\"\n        // \"66d74965e5a2056fdcbed059\"\n    ]\n}\n",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:4000/api/v1/courses/deactivatedMultiple",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "4000",
+									"path": [
+										"api",
+										"v1",
+										"courses",
+										"deactivatedMultiple"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "admin reactivated multiple",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "{{TOKEN}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"courseIds\": [\n        \"66d7494ee5a2056fdcbed055\"\n        // \"66d74965e5a2056fdcbed059\"\n    ]\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:4000/api/v1/courses/reactivatedMultiple",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "4000",
+									"path": [
+										"api",
+										"v1",
+										"courses",
+										"reactivatedMultiple"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "admin update course",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "{{TOKEN}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "title",
+											"value": "14th",
+											"type": "text"
+										},
+										{
+											"key": "description",
+											"value": "last function for today",
+											"type": "text"
+										},
+										{
+											"key": "author",
+											"value": "jame bond",
+											"type": "text"
+										},
+										{
+											"key": "visibility[status]",
+											"value": "public",
+											"type": "text"
+										},
+										{
+											"key": "visibility[datePublished]",
+											"value": "2024-09-05",
+											"type": "text"
+										},
+										{
+											"key": "conditions[subscribeMonths]",
+											"value": "2",
+											"type": "text"
+										},
+										{
+											"key": "workBook",
+											"type": "file",
+											"src": "/Users/jacksmartel/Downloads/workbbok.pdf"
+										},
+										{
+											"key": "trailer",
+											"type": "file",
+											"src": "/Users/jacksmartel/Downloads/4954949-hd_1920_1080_25fps.mp4"
+										},
+										{
+											"key": "banner",
+											"type": "file",
+											"src": "/Users/jacksmartel/Documents/sample-img.jpeg"
+										}
+									]
+								},
+								"url": {
+									"raw": "http://localhost:4000/api/v1/update/course/66d9404eea56d2421985988b",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "4000",
+									"path": [
+										"api",
+										"v1",
+										"update",
+										"course",
+										"66d9404eea56d2421985988b"
+									]
+								}
+							},
+							"response": []
 						}
-					},
-					"response": []
+					]
 				},
 				{
-					"name": "get all courses",
+					"name": "get all public courses",
 					"request": {
 						"method": "GET",
 						"header": [
@@ -436,7 +717,7 @@
 					"response": []
 				},
 				{
-					"name": "get single course",
+					"name": "get public single course",
 					"request": {
 						"method": "GET",
 						"header": [
@@ -447,7 +728,7 @@
 							}
 						],
 						"url": {
-							"raw": "http://localhost:4000/api/v1/singleCourse/66d724a7458b286c0df8cde7",
+							"raw": "http://localhost:4000/api/v1/singleCourse/66dc502a7c2a8ae7e06342c5",
 							"protocol": "http",
 							"host": [
 								"localhost"
@@ -457,25 +738,30 @@
 								"api",
 								"v1",
 								"singleCourse",
-								"66d724a7458b286c0df8cde7"
+								"66dc502a7c2a8ae7e06342c5"
 							]
 						}
 					},
 					"response": []
 				},
 				{
-					"name": "deactivated",
+					"name": "download workbook",
 					"request": {
-						"method": "PUT",
+						"method": "GET",
 						"header": [
 							{
 								"key": "Authorization",
 								"value": "{{TOKEN}}",
 								"type": "text"
+							},
+							{
+								"key": "",
+								"value": "",
+								"type": "text"
 							}
 						],
 						"url": {
-							"raw": "http://localhost:4000/api/v1/course/deactivated/66d718a7b9a6a3958a57db5d",
+							"raw": "http://localhost:4000/api/v1/download/workbook/66d940b9ea56d2421985988f",
 							"protocol": "http",
 							"host": [
 								"localhost"
@@ -484,38 +770,9 @@
 							"path": [
 								"api",
 								"v1",
-								"course",
-								"deactivated",
-								"66d718a7b9a6a3958a57db5d"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "reactivated",
-					"request": {
-						"method": "PUT",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "{{TOKEN}}",
-								"type": "text"
-							}
-						],
-						"url": {
-							"raw": "http://localhost:4000/api/v1/course/deactivated/",
-							"protocol": "http",
-							"host": [
-								"localhost"
-							],
-							"port": "4000",
-							"path": [
-								"api",
-								"v1",
-								"course",
-								"deactivated",
-								""
+								"download",
+								"workbook",
+								"66d940b9ea56d2421985988f"
 							]
 						}
 					},
@@ -672,7 +929,7 @@
 							"raw": "\n"
 						},
 						"url": {
-							"raw": "http://localhost:4000/api/v1/setDefault/66d80bd269925a8c097bbba2",
+							"raw": "http://localhost:4000/api/v1/setDefault/66d8793775fd29411c0e9806",
 							"protocol": "http",
 							"host": [
 								"localhost"
@@ -682,7 +939,7 @@
 								"api",
 								"v1",
 								"setDefault",
-								"66d80bd269925a8c097bbba2"
+								"66d8793775fd29411c0e9806"
 							]
 						}
 					},
@@ -763,6 +1020,679 @@
 					"response": []
 				}
 			]
+		},
+		{
+			"name": "analytics",
+			"item": [
+				{
+					"name": "total students",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{TOKEN}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:4000/api/v1/allStudents",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "4000",
+							"path": [
+								"api",
+								"v1",
+								"allStudents"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "total downloaded workbook",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{TOKEN}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:4000/api/v1/totalDownloaded",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "4000",
+							"path": [
+								"api",
+								"v1",
+								"totalDownloaded"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "total completed course",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{TOKEN}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:4000/api/v1/totalCompleted",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "4000",
+							"path": [
+								"api",
+								"v1",
+								"totalCompleted"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "total inactive",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{TOKEN}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:4000/api/v1/totalInactive",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "4000",
+							"path": [
+								"api",
+								"v1",
+								"totalInactive"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "total active",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{TOKEN}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:4000/api/v1/totalActive",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "4000",
+							"path": [
+								"api",
+								"v1",
+								"totalActive"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "lesson",
+			"item": [
+				{
+					"name": "admin control",
+					"item": [
+						{
+							"name": "new lesson",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "{{TOKEN}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "assignCourse",
+											"value": "66d940b9ea56d2421985988f",
+											"type": "text"
+										},
+										{
+											"key": "lessonTitle",
+											"value": "How to create family planning",
+											"type": "text"
+										},
+										{
+											"key": "videoLesson[title]",
+											"value": "Lesson - 2 buy a eggs",
+											"type": "text"
+										},
+										{
+											"key": "videoLesson[author]",
+											"value": "jacks novv",
+											"type": "text"
+										},
+										{
+											"key": "videoLesson[description]",
+											"value": "this video is for test purposes",
+											"type": "text"
+										},
+										{
+											"key": "videoLesson[transcription]",
+											"value": "amazing people create creative things",
+											"type": "text"
+										},
+										{
+											"key": "videoLesson[visibility][status]",
+											"value": "unlisted",
+											"type": "text"
+										},
+										{
+											"key": "videoLesson[visibility][datePublished]",
+											"value": "2024-09-3",
+											"type": "text"
+										},
+										{
+											"key": "video",
+											"type": "file",
+											"src": "/Users/jacksmartel/Downloads/6981614-hd_1920_1080_30fps.mp4"
+										},
+										{
+											"key": "banner",
+											"type": "file",
+											"src": "/Users/jacksmartel/Downloads/piattos_ynoz9d.jpg"
+										},
+										{
+											"key": "thumbnail",
+											"type": "file",
+											"src": "/Users/jacksmartel/Downloads/two-ladies.jpg"
+										}
+									]
+								},
+								"url": {
+									"raw": "http://localhost:4000/api/v1/new/lesson",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "4000",
+									"path": [
+										"api",
+										"v1",
+										"new",
+										"lesson"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "add lesson video",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "{{TOKEN}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "videoLesson[title]",
+											"value": "Lesson - 1 buy a paper",
+											"type": "text"
+										},
+										{
+											"key": "videoLesson[author]",
+											"value": "jacks novv",
+											"type": "text"
+										},
+										{
+											"key": "videoLesson[description]",
+											"value": "this lesson is intend to buy a pen",
+											"type": "text"
+										},
+										{
+											"key": "videoLesson[transcription]",
+											"value": "use luxury pen",
+											"type": "text"
+										},
+										{
+											"key": "videoLesson[visibility][status]",
+											"value": "unlisted",
+											"type": "text"
+										},
+										{
+											"key": "videoLesson[visibility][datePublished]",
+											"value": "2024-09-04",
+											"type": "text"
+										},
+										{
+											"key": "video",
+											"type": "file",
+											"src": "/Users/jacksmartel/Downloads/6981614-hd_1920_1080_30fps.mp4"
+										},
+										{
+											"key": "banner",
+											"type": "file",
+											"src": "/Users/jacksmartel/Documents/grapes.jpg"
+										},
+										{
+											"key": "thumbnail",
+											"type": "file",
+											"src": "/Users/jacksmartel/Documents/nmax.jpeg"
+										}
+									]
+								},
+								"url": {
+									"raw": "http://localhost:4000/api/v1/add/lesson/66d99240fa593e84d7ed3dbb",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "4000",
+									"path": [
+										"api",
+										"v1",
+										"add",
+										"lesson",
+										"66d99240fa593e84d7ed3dbb"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "admin lessons",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "{{TOKEN}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "http://localhost:4000/api/v1/admin/lessons",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "4000",
+									"path": [
+										"api",
+										"v1",
+										"admin",
+										"lessons"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "admin single lesson",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "{{TOKEN}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "http://localhost:4000/api/v1/admin/singleLesson/66db3b315475a0fdb0b77721",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "4000",
+									"path": [
+										"api",
+										"v1",
+										"admin",
+										"singleLesson",
+										"66db3b315475a0fdb0b77721"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "deactivate multiple lesson",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "{{TOKEN}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"lessonIds\": [\n        \"66d99240fa593e84d7ed3dbb\"\n    ]\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:4000/api/v1/lessons/deactivatedMultiple",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "4000",
+									"path": [
+										"api",
+										"v1",
+										"lessons",
+										"deactivatedMultiple"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "reactivate multiple lesson",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "{{TOKEN}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n     \"lessonIds\": [\n        \"66d99240fa593e84d7ed3dbb\"\n    ]\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:4000/api/v1/lessons/reactivatedMultiple",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "4000",
+									"path": [
+										"api",
+										"v1",
+										"lessons",
+										"reactivatedMultiple"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "get all public lessons",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{TOKEN}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:4000/api/v1/allLessons",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "4000",
+							"path": [
+								"api",
+								"v1",
+								"allLessons"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get public single lesson",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{TOKEN}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:4000/api/v1/singleLesson/66d99240fa593e84d7ed3dbb",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "4000",
+							"path": [
+								"api",
+								"v1",
+								"singleLesson",
+								"66d99240fa593e84d7ed3dbb"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Progress Watch",
+			"item": [
+				{
+					"name": "start progress",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{TOKEN}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"lessonId\": \"66db3b315475a0fdb0b77721\",\n    \"videoLessonId\": \"66dbdd13cea9632551b25558\",\n    \"currentDuration\": {\n        \"hours\": 0,\n        \"minutes\": 0,\n        \"seconds\": 15\n    }\n}\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:4000/api/v1/progress/start",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "4000",
+							"path": [
+								"api",
+								"v1",
+								"progress",
+								"start"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get the latest progress",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "get the currently watch",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "finished courses",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "finished videos",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "customization",
+			"item": [
+				{
+					"name": "create customization",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:4000/api/v1/new/customization",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "4000",
+							"path": [
+								"api",
+								"v1",
+								"new",
+								"customization"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "all design",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "re order ui",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:4000/api/v1/reorder/ui/",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "4000",
+							"path": [
+								"api",
+								"v1",
+								"reorder",
+								"ui",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "update data",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{TOKEN}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"newOrder\": [\n        {\n            \"imgSec\": {\n                \"public_id\": \"newPublicId1\",\n                \"url\": \"http://res.cloudinary.com/newUrl1\"\n            },\n            \"imgTwo\": [\n                {\n                    \"public_id\": \"newImgPublicId1\",\n                    \"url\": \"http://res.cloudinary.com/newImgUrl1\"\n                },\n                {\n                    \"public_id\": \"newImgPublicId2\",\n                    \"url\": \"http://res.cloudinary.com/newImgUrl2\"\n                }\n            ],\n            \"singleVideo\": {\n                \"public_id\": \"newVideoPublicId1\",\n                \"url\": \"http://res.cloudinary.com/newVideoUrl1\"\n            },\n            \"textSec\": {\n                \"text\": \"Updated text for section 1\",\n                \"style\": \"newStyle1\"\n            },\n            \"spaceSec\": \"Updated space info\",\n            \"dividerSec\": \"Updated divider info\"\n        },\n        {\n            \"imgSec\": {\n                \"public_id\": \"newPublicId2\",\n                \"url\": \"http://res.cloudinary.com/newUrl2\"\n            },\n            \"imgTwo\": [\n                {\n                    \"public_id\": \"newImgPublicId3\",\n                    \"url\": \"http://res.cloudinary.com/newImgUrl3\"\n                }\n            ],\n            \"singleVideo\": {\n                \"public_id\": \"newVideoPublicId2\",\n                \"url\": \"http://res.cloudinary.com/newVideoUrl2\"\n            },\n            \"textSec\": {\n                \"text\": \"\",\n                \"style\": \"\"\n            },\n            \"spaceSec\": \"\",\n            \"dividerSec\": \"\"\n        }\n    ]\n}\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:4000/api/v1/update/data/66ef9a33a602564f09037c70",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "4000",
+							"path": [
+								"api",
+								"v1",
+								"update",
+								"data",
+								"66ef9a33a602564f09037c70"
+							]
+						}
+					},
+					"response": []
+				}
+			]
 		}
 	],
 	"event": [
@@ -790,7 +1720,7 @@
 	"variable": [
 		{
 			"key": "TOKEN",
-			"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY2ZDViODVkNjE3YmYwZjcwNzdmMzA2YyIsImlhdCI6MTcyNTM4MjQ0NSwiZXhwIjoxNzI1OTg3MjQ1fQ.lgs0SqmAbrH8lJ8MZaCrxTMNixDegy-sT1LNqE21E0Y",
+			"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY2ZDg3NjExNzVmZDI5NDExYzBlOTdmZSIsImlhdCI6MTcyNjkwMDM4MywiZXhwIjoxNzI3NTA1MTgzfQ.JFzPh9awqit9iD0WFRZBAzyoKKwMCD6jpfXvLnSwwbo",
 			"type": "string"
 		}
 	]
